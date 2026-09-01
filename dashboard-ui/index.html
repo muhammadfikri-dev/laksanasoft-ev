@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Laksanasoft-EV — Digital Instrument Cluster</title>
+  <link rel="stylesheet" href="styles.css">
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;800;900&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="cluster-container">
+    <!-- Top Status Bar -->
+    <header class="status-bar">
+      <div class="brand">
+        <span class="brand-logo">⚡</span>
+        <span class="brand-name">LAKSANASOFT <strong>EV</strong></span>
+        <span class="vin-tag" id="vinDisplay">VIN: LAKSANAEV2026ID001</span>
+      </div>
+      <div class="top-indicators">
+        <span class="badge" id="indicatorReady">READY</span>
+        <span class="badge" id="indicatorStand">STAND DOWN</span>
+        <span class="badge" id="indicatorBrake">BRAKE</span>
+        <span class="badge" id="indicatorRegen">REGEN</span>
+        <span class="badge badge-alert" id="indicatorFault">FAULT</span>
+      </div>
+      <div class="connection-status">
+        <span class="ws-dot" id="wsStatusDot"></span>
+        <span id="wsStatusText">LIVE WS</span>
+      </div>
+    </header>
+
+    <!-- Main Gauge & Speedometer Section -->
+    <main class="main-display">
+      <!-- Left Panel: Energy & Battery -->
+      <section class="panel panel-left">
+        <div class="panel-header">SISTEM BATERAI 72V</div>
+        
+        <div class="soc-display">
+          <div class="soc-circle-wrapper">
+            <svg class="soc-svg" viewBox="0 0 120 120">
+              <circle class="soc-bg" cx="60" cy="60" r="50" />
+              <circle class="soc-progress" id="socRing" cx="60" cy="60" r="50" />
+            </svg>
+            <div class="soc-inner-text">
+              <span class="soc-val" id="socValue">88</span>
+              <span class="soc-unit">%</span>
+            </div>
+          </div>
+          <div class="range-box">
+            <span class="range-label">EST. RANGE</span>
+            <span class="range-val" id="rangeValue">85</span>
+            <span class="range-unit">KM</span>
+          </div>
+        </div>
+
+        <div class="metrics-list">
+          <div class="metric-item">
+            <span class="m-label">Tegangan Bus</span>
+            <span class="m-val" id="valVoltage">74.2 <small>V</small></span>
+          </div>
+          <div class="metric-item">
+            <span class="m-label">Arus Baterai</span>
+            <span class="m-val" id="valCurrent">0.0 <small>A</small></span>
+          </div>
+          <div class="metric-item">
+            <span class="m-label">Daya Output</span>
+            <span class="m-val" id="valPower">0.00 <small>kW</small></span>
+          </div>
+          <div class="metric-item">
+            <span class="m-label">Kesehatan Baterai (SOH)</span>
+            <span class="m-val text-green" id="valSoh">99 <small>%</small></span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Center Cluster: Main Speedometer & Drive Mode -->
+      <section class="panel panel-center">
+        <!-- Drive Mode Indicator -->
+        <div class="mode-selector">
+          <span class="mode-tab" id="modeEco">ECO</span>
+          <span class="mode-tab" id="modeUrban">URBAN</span>
+          <span class="mode-tab active" id="modeSport">SPORT</span>
+          <span class="mode-tab" id="modeReverse">REV</span>
+        </div>
+
+        <!-- Central Speed Arc Gauge -->
+        <div class="speedometer-box">
+          <svg class="speed-arc-svg" viewBox="0 0 300 200">
+            <path class="speed-track" d="M 40 180 A 110 110 0 1 1 260 180" />
+            <path class="speed-fill" id="speedArcFill" d="M 40 180 A 110 110 0 1 1 260 180" />
+          </svg>
+          <div class="speed-digits">
+            <span class="speed-num" id="speedDisplay">0</span>
+            <span class="speed-unit">KM/H</span>
+          </div>
+        </div>
+
+        <!-- RPM & Power Bar -->
+        <div class="rpm-power-wrapper">
+          <div class="bar-labels">
+            <span>MOTOR RPM: <strong id="valRpm">0</strong></span>
+            <span>THROTTLE: <strong id="valThrottle">0%</strong></span>
+          </div>
+          <div class="power-bar-track">
+            <div class="power-bar-fill" id="powerBar"></div>
+          </div>
+        </div>
+
+        <div class="state-message" id="stateMsgDisplay">
+          STATUS: DRIVE READY
+        </div>
+      </section>
+
+      <!-- Right Panel: Thermal & Diagnostics -->
+      <section class="panel panel-right">
+        <div class="panel-header">TERMAL & DIAGNOSTIK</div>
+        
+        <div class="thermal-grid">
+          <div class="thermal-card">
+            <span class="t-icon">⚙️</span>
+            <span class="t-label">Motor PMSM</span>
+            <span class="t-val" id="valMotorTemp">42.0°C</span>
+          </div>
+          <div class="thermal-card">
+            <span class="t-icon">⚡</span>
+            <span class="t-label">Inverter FOC</span>
+            <span class="t-val" id="valInverterTemp">38.5°C</span>
+          </div>
+          <div class="thermal-card">
+            <span class="t-icon">🔋</span>
+            <span class="t-label">BMS Pack</span>
+            <span class="t-val" id="valBmsTemp">32.0°C</span>
+          </div>
+          <div class="thermal-card">
+            <span class="t-icon">🛡️</span>
+            <span class="t-label">CAN Bus</span>
+            <span class="t-val text-green" id="valCanStatus">OK</span>
+          </div>
+        </div>
+
+        <div class="diagnostics-box">
+          <div class="diag-title">FAULT MONITOR</div>
+          <div class="diag-code" id="diagFaultCode">FAULTS: NONE (CODE 0)</div>
+          <div class="diag-desc" id="diagFaultDesc">Sistem beroperasi normal tanpa anomali.</div>
+        </div>
+
+        <!-- Control Simulation Buttons (For testing without hardware) -->
+        <div class="sim-controls">
+          <button class="btn-sim" onclick="sendDemoThrottle(25)">Gas 25%</button>
+          <button class="btn-sim" onclick="sendDemoThrottle(75)">Gas 75%</button>
+          <button class="btn-sim btn-brake" onclick="sendDemoBrake()">Rem</button>
+        </div>
+      </section>
+    </main>
+
+    <!-- Footer Odometer & Trip -->
+    <footer class="cluster-footer">
+      <div class="foot-item">ODO: <strong id="valOdo">001420.8</strong> km</div>
+      <div class="foot-item">TRIP A: <strong id="valTrip">18.4</strong> km</div>
+      <div class="foot-item">EFISIENSI: <strong>25.0</strong> Wh/km</div>
+      <div class="foot-item">VCU UPTIME: <strong id="valUptime">00:15:20</strong></div>
+    </footer>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

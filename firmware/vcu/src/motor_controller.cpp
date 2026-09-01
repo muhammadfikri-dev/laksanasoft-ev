@@ -29,8 +29,6 @@ void MotorController::setTorqueDemand(float torquePercent, bool isReverse) {
     digitalWrite(PIN_REGEN_BRAKE_OUT, LOW);
     
     // Konversi 0 - 100% ke rentang tegangan throttle Inverter (0.8V - 4.2V pada DAC 10-bit)
-    // 0.8V / 5.0V * 1023 = 163 (Offset awal)
-    // 4.2V / 5.0V * 1023 = 860 (Batas atas)
     uint32_t duty = 0;
     if (_currentTorqueOut > 0.5f) {
         duty = 163 + (uint32_t)((_currentTorqueOut / 100.0f) * (860 - 163));
@@ -61,28 +59,42 @@ void MotorController::emergencyStop() {
 }
 
 void MotorController::updateFeedback(VehicleTelemetry& telemetry) {
-    // Estimasi dinamika kecepatan & RPM motor berbasis daya / feedback inverter
-    // Rasio reduksi 1:4.2, keliling ban 14 inci = 1.677 meter
+    // Estimasi dinamika motor QS 138 90H V3 (hingga 6000 RPM dengan Field Weakening)
+    // Rasio reduksi 1:3.0, keliling ban 1.677m
     if (telemetry.currentState == STATE_DRIVE) {
-        float targetRpm = (_currentTorqueOut / 100.0f) * 4500.0f;
-        telemetry.motorRpm = (int16_t)((telemetry.motorRpm * 0.9f) + (targetRpm * 0.1f));
+        float maxRpmTarget = (telemetry.currentMode == MODE_SPORT) ? 5800.0f : 
+                            ((telemetry.currentMode == MODE_URBAN) ? 4000.0f : 2400.0f);
+        float targetRpm = (_currentTorqueOut / 100.0f) * maxRpmTarget;
+        telemetry.motorRpm = (int16_t)((telemetry.motorRpm * 0.92f) + (targetRpm * 0.08f));
     } else if (telemetry.currentState == STATE_REGEN) {
-        telemetry.motorRpm = (int16_t)(telemetry.motorRpm * 0.85f);
+        telemetry.motorRpm = (int16_t)(telemetry.motorRpm * 0.82f);
     } else {
         telemetry.motorRpm = 0;
     }
     
-    // Kecepatan km/h = (RPM Motor / 4.2) * 1.677m * 60 / 1000
-    telemetry.vehicleSpeedKmh = (telemetry.motorRpm / 4.2f) * 1.677f * 0.06f;
+    // Kecepatan km/h = (RPM Motor / GEAR_RATIO_REDUCTION) * WHEEL_CIRCUMFERENCE_M * 60 / 1000
+    telemetry.vehicleSpeedKmh = (telemetry.motorRpm / GEAR_RATIO_REDUCTION) * WHEEL_CIRCUMFERENCE_M * 0.06f;
     if (telemetry.vehicleSpeedKmh < 0.5f) telemetry.vehicleSpeedKmh = 0.0f;
     
-    // Simulasi suhu operasional termal
+    // Kalkulasi konsumsi daya dinamis untuk high-speed (hingga 16kW)
+    if (_currentTorqueOut > 1.0f) {
+        telemetry.packCurrentAmp = (_currentTorqueOut / 100.0f) * MAX_CURRENT_BUS_AMP;
+        telemetry.packPowerWatts = telemetry.packVoltage * telemetry.packCurrentAmp;
+    } else if (telemetry.currentState == STATE_REGEN) {
+        telemetry.packCurrentAmp = -35.0f; // Arus balik regenerasi ke baterai 35A
+        telemetry.packPowerWatts = telemetry.packVoltage * telemetry.packCurrentAmp;
+    } else {
+        telemetry.packCurrentAmp = 1.2f; // Konsumsi idle sistem bantu
+        telemetry.packPowerWatts = telemetry.packVoltage * telemetry.packCurrentAmp;
+    }
+
+    // Simulasi termal dinamis kecepatan tinggi
     if (telemetry.motorTempC == 0.0f) telemetry.motorTempC = 42.0f;
     if (telemetry.inverterTempC == 0.0f) telemetry.inverterTempC = 38.0f;
     
-    if (_currentTorqueOut > 50.0f) {
-        telemetry.motorTempC += 0.02f;
-        telemetry.inverterTempC += 0.015f;
+    if (_currentTorqueOut > 70.0f) {
+        telemetry.motorTempC += 0.035f;
+        telemetry.inverterTempC += 0.025f;
     } else {
         if (telemetry.motorTempC > 40.0f) telemetry.motorTempC -= 0.01f;
         if (telemetry.inverterTempC > 36.0f) telemetry.inverterTempC -= 0.01f;

@@ -1,6 +1,6 @@
-# 🔄 Alur & Cara Kerja Sistem Laksanasoft-EV
+# 🔄 Alur & Cara Kerja Sistem (High Performance Edition - 120 km/jam)
 
-Dokumen ini menjelaskan logika operasional menyeluruh, mesin status (*Finite State Machine* / FSM), algoritma pengkondisian gas, perhitungan pengereman regeneratif, dan manajemen termal pada platform **Laksanasoft-EV**.
+Dokumen ini menjelaskan logika operasional menyeluruh, mesin status (*Finite State Machine* / FSM), algoritma pengkondisian gas, manajemen *Flux Weakening*, perhitungan pengereman regeneratif, dan manajemen termal pada platform **Laksanasoft-EV** berkecepatan **120 km/jam**.
 
 ---
 
@@ -17,7 +17,7 @@ stateDiagram-v2
     state STATE_BOOT {
         [*] --> SelfTest
         SelfTest --> CheckSensors : Periksa APPS & Interlock
-        CheckSensors --> CheckBMS : Baca Status Tegangan Sel
+        CheckSensors --> CheckBMS : Baca Status Tegangan Sel & Arus Maksimal
     }
     
     STATE_BOOT --> STATE_PRECHARGE : Self-Test Lolos (OK)
@@ -40,9 +40,9 @@ stateDiagram-v2
     STATE_STANDBY --> STATE_DRIVE : Standar Naik + Tekan Rem + Throttle 0%
     
     state STATE_DRIVE {
-        [*] --> EcoMode
-        EcoMode --> UrbanMode : Ganti Mode
-        UrbanMode --> SportMode : Ganti Mode
+        [*] --> EcoMode : Max 50 km/h (Hemat Baterai)
+        EcoMode --> UrbanMode : Ganti Mode (Max 85 km/h)
+        UrbanMode --> SportMode : Ganti Mode (Max 120+ km/h + Flux Weakening)
         SportMode --> ReverseMode : Saklar Mundur Aktif & Kecepatan < 3km/h
     }
     
@@ -51,99 +51,70 @@ stateDiagram-v2
     
     STATE_DRIVE --> STATE_STANDBY : Standar Samping Turun
     
-    STATE_DRIVE --> STATE_FAULT : APPS Mismatch / Over-Current / Over-Heat
+    STATE_DRIVE --> STATE_FAULT : APPS Mismatch / Over-Current / Over-Heat (>95°C)
     STATE_STANDBY --> STATE_FAULT : BMS Undervoltage / Error CAN
     
     STATE_FAULT --> STATE_SHUTDOWN : Emergency Kill Switch / Critical Fault
     STATE_DRIVE --> STATE_SHUTDOWN : Kunci Kontak OFF
     STATE_STANDBY --> STATE_SHUTDOWN : Kunci Kontak OFF
     
-    STATE_SHUTDOWN --> STATE_OFF : Kontaktor Terbuka & VCU Sleep
+    STATE_SHUTDOWN --> STATE_OFF : Kontaktor/MCB Terbuka & VCU Sleep
 ```
 
 ---
 
-## 2. Alur Kerja Detil Setiap Fase
-
-### A. Prosedur Start-Up & Pre-Charge
-1. Pengendara memutar kunci kontak ke posisi **ON**.
-2. Modul DC-DC Converter menyala dan menyuplai tegangan $12\text{V}$ ke sistem kendali serta $3.3\text{V}$ ke VCU ESP32-S3.
-3. VCU melakukan *Power-On Self-Test (POST)* selama $200\text{ ms}$:
-   - Memvalidasi offset tegangan nol sensor APPS.
-   - Membaca data status BMS via UART/CAN (memastikan semua sel berada pada rentang $3.0\text{V} - 4.2\text{V}$).
-   - Memastikan tombol *Emergency Kill Switch* tidak aktif.
-4. VCU mengaktifkan **Pre-Charge Relay** (Pin GPIO 9). Arus baterai mengalir melalui resistor $100\,\Omega / 50\text{W}$ ke inverter.
-5. Setelah waktu tunda $1.5\text{ detik}$, kapasitor inverter terisi penuh. VCU menyalakan **Main Contactor** (Pin GPIO 8).
-6. Pre-Charge Relay dimatikan. Kendaraan memasuki status **STANDBY**.
-
-### B. Prosedur Persiapan Melaju (Arming System)
-Untuk mencegah kendaraan meloncat secara tidak sengaja (*anti-lurch*), sistem hanya dapat beralih ke status **DRIVE** jika memenuhi 3 syarat wajib:
-- Standar samping terlipat ke atas (*side stand retracted*).
-- Tuas rem ditekan sedikit (*brake engaged*).
-- Bukaan gas berada pada posisi $0\%$ (idle).
-Setelah ketiga kondisi terpenuhi, lampu indikator **READY** menyala hijau pada layar HMI.
-
----
-
-## 3. Algoritma Pemetaan Gas (Throttle Curve Mapping)
-
-VCU mengonversi input sudut bukaan gas pengendara ($0\% - 100\%$) menjadi sinyal perintah torsi/arus ke inverter berdasarkan mode berkendara yang dipilih:
+## 2. Algoritma Pemetaan Gas & Manajemen Kecepatan 120 km/jam
 
 ```
 Torsi Target (%)
- 100% |                                      / (SPORT - Responsif Linear Penuh)
+ 100% |                                      / (SPORT - 120+ km/jam, Full 18kW Peak)
       |                                     /
-  75% |                            _..---''   (URBAN - Karakter Natural)
+  70% |                            _..---''   (URBAN - 85 km/jam, 8kW Peak)
       |                    _..---''
-  50% |              _..-''                  (ECO - Kurva S Progresif Halus)
+  35% |              _..-''                  (ECO - 50 km/jam, 3kW Cruise)
       |        _..-''
-  25% |   _.-''
-      | _/
    0% +----------------------------------------
       0%      25%      50%      75%     100%  Bukaan Gas (APPS %)
 ```
 
 ### Rumus Karakteristik Mode:
-1. **Mode ECO:**
-   - Pembatasan daya maksimal: $40\%$ ($1200\text{W}$).
-   - Kecepatan maksimal dibatasi pada $45\text{ km/jam}$.
-   - Kurva akselerasi menggunakan pemetaan kuadratik halus:
-     $$T_{out} = 0.40 \times (Throttle_{in})^2$$
-2. **Mode URBAN (Normal):**
-   - Pembatasan daya maksimal: $75\%$ ($2250\text{W}$).
-   - Kecepatan maksimal: $70\text{ km/jam}$.
-   - Karakter linier teredam:
-     $$T_{out} = 0.75 \times Throttle_{in}$$
-3. **Mode SPORT:**
-   - Akselerasi penuh $100\%$ ($3000\text{W}$ nominal, $6000\text{W}$ *peak transient*).
-   - Kecepatan maksimal: $90+\text{ km/jam}$.
-   - Respon instan tanpa batasan kurva.
+1. **Mode ECO (Jelajah Jauh):**
+   - Batas Daya: $35\%$ ($3000\text{W}$).
+   - Batas Kecepatan: **$50\text{ km/jam}$**.
+   - Konsumsi energi sangat hemat ($\approx 22\text{ Wh/km}$), memaksimalkan jarak tempuh hingga $110\text{ km}$.
+2. **Mode URBAN (Harian Responsif):**
+   - Batas Daya: $70\%$ ($8000\text{W}$).
+   - Batas Kecepatan: **$85\text{ km/jam}$**.
+   - Karakter linier untuk lalu lintas perkotaan dan jalan lingkar.
+3. **Mode SPORT / BOOST (Performa Puncak 120 km/jam):**
+   - Daya Puncak: **$100\%$ ($15.000\text{W} - 18.000\text{W}$ Peak)**.
+   - Kecepatan Puncak: **$120 - 125\text{ km/jam}$**.
+   - Algoritma **Active Flux Weakening** aktif otomatis ketika putaran motor melebihi $3500\text{ RPM}$ untuk menembus batas tegangan induksi balik (*Back-EMF*).
 4. **Mode REVERSE (Mundur):**
-   - Batas daya: $15\%$.
-   - Kecepatan puncak otomatis dikunci pada $5\text{ km/jam}$ demi keselamatan.
+   - Batas daya: $15\%$, kecepatan dikunci otomatis pada $5\text{ km/jam}$.
 
 ---
 
-## 4. Logika Pengereman Regeneratif (Regenerative E-Braking)
+## 3. Logika Pengereman Regeneratif Kecepatan Tinggi (High-Speed E-Braking)
 
-Ketika pengendara menarik tuas rem saat kendaraan bergerak dengan kecepatan $v > 5\text{ km/jam}$:
-1. Sensor rem mengirimkan sinyal interlock ke VCU.
-2. VCU secara instan mematikan perintah gas (*Throttle override to 0%*).
-3. VCU mengirimkan sinyal torsi balik (pengereman regeneratif) ke Inverter via CAN Bus / pin analog.
-4. Inverter memfungsikan motor sebagai generator AC 3-fasa, menyearahkan arus fasa, dan memompa kembali daya listrik ke baterai pack 72V.
-5. **Adaptive Regen Protection:**
-   - Jika State of Charge (SoC) baterai $> 95\%$, torsi regen diturunkan ke $0\%$ untuk mencegah *Over-Voltage* sel.
-   - Jika kecepatan kendaraan $< 5\text{ km/jam}$, regen dimatikan secara halus agar deselerasi akhir ditangani sepenuhnya oleh rem hidrolik fisik.
+Pengereman pada kecepatan $120\text{ km/jam}$ menghasilkan energi kinetik yang sangat besar ($E_k = \frac{1}{2} m v^2 \approx 116.6\text{ kJ}$).
+
+1. **Fase Deselerasi Awal ($120 \rightarrow 60\text{ km/jam}$):**
+   - Inverter mengalirkan arus regen pengereman dinamis hingga $60\text{A}$ ke baterai, memberikan efek pengereman mesin (*engine brake*) yang kuat dan stabil tanpa mengunci roda belakang.
+2. **Fase Transisi ($60 \rightarrow 10\text{ km/jam}$):**
+   - Torsi pengereman regeneratif berangsur ditransisikan ke rem hidrolik fisik cakram 4-piston.
+3. **Fase Berhenti ($< 5\text{ km/jam}$):**
+   - Pengereman regeneratif dinonaktifkan secara halus agar motor tidak tersentak saat berhenti sempurna.
 
 ---
 
-## 5. Manajemen Perlindungan Termal (Thermal Derating)
+## 4. Manajemen Termal Kecepatan Tinggi (Thermal Throttling)
 
-VCU memonitor suhu inverter ($T_{inv}$) dan suhu motor ($T_{mot}$) secara kontinu:
+Cruising pada kecepatan $120\text{ km/jam}$ secara terus menerus memicu kenaikan suhu pada kabel fasa, MOSFET controller, dan lilitan stator motor:
 
 | Suhu Sensor | Status Operasional | Tindakan VCU |
 | :--- | :--- | :--- |
-| $< 70^\circ\text{C}$ | Normal | Daya 100% dialirkan tanpa batasan |
-| $70^\circ\text{C} - 85^\circ\text{C}$ | Peringatan Panas (*Warm*) | Pembatasan daya bertahap dari 100% turun ke 60% (*Linear Derating*) |
-| $85^\circ\text{C} - 95^\circ\text{C}$ | Kritis (*Over-Heat Warning*) | Daya dikunci maksimal 25% (Limp Mode) |
-| $> 95^\circ\text{C}$ | Bahaya Termal (*Over-Heat Cutoff*)| Pemutusan daya total ke motor demi mencegah demagnetisasi rotor |
+| $< 75^\circ\text{C}$ | Normal | Daya penuh $18\text{ kW}$ tersedia tanpa limitasi |
+| $75^\circ\text{C} - 88^\circ\text{C}$ | Peringatan Suhu Tinggi (*Warm*) | Pembatasan daya bertahap dari 100% turun ke 65% (*Linear Derating*) |
+| $88^\circ\text{C} - 95^\circ\text{C}$ | Kritis (*Over-Heat*) | Daya dikunci maksimal 30% (Kecepatan turun ke 60 km/jam demi pendinginan) |
+| $> 95^\circ\text{C}$ | Bahaya Termal (*Cutoff*) | Pemutusan daya motor (*Emergency Safe Torque Off*) |

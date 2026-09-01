@@ -7,7 +7,7 @@
 // IDENTIFIKASI KENDARAAN (VEHICLE ID)
 // ==========================================
 #define VEHICLE_VIN             "LAKSANAEV2026ID001"
-#define FIRMWARE_VERSION        "1.0.0-PROD"
+#define FIRMWARE_VERSION        "2.0.0-HIGH-PERFORMANCE-120KMH"
 
 // ==========================================
 // ALOKASI PIN GPIO (ESP32-S3)
@@ -42,7 +42,7 @@
 #define PIN_I2C_SCL             39
 
 // ==========================================
-// PARAMETER KALIBRASI & THRESHOLD AMAN
+// PARAMETER KALIBRASI 120 KM/JAM HIGH POWER
 // ==========================================
 #define APPS_VOLT_MIN_VALID     0.50f   // Batas bawah voltase ADC valid
 #define APPS_VOLT_MAX_VALID     4.50f   // Batas atas voltase ADC valid
@@ -50,18 +50,23 @@
 #define APPS_MAX_DISCREPANCY    10.0f   // Toleransi selisih APPS1 & APPS2 (%)
 #define APPS_FAULT_TIMEOUT_MS   100     // Waktu toleransi mismatch sebelum cut-off
 
+#define GEAR_RATIO_REDUCTION    3.0f    // Rasio reduksi gir 15T : 45T untuk 120 km/jam
+#define WHEEL_CIRCUMFERENCE_M   1.677f  // Keliling ban 14 inci (110/80-14)
+#define MAX_CURRENT_BUS_AMP     200.0f  // Arus bus maksimal baterai (200 Ampere)
+#define PEAK_POWER_WATTS        18000.0f// Daya puncak 18 kW Peak
+
 #define PRECHARGE_DURATION_MS   1500    // Durasi pre-charge sebelum kontaktor ON
 #define MOTOR_TEMP_WARN_C       75.0f   // Suhu peringatan motor
 #define MOTOR_TEMP_CUTOFF_C     95.0f   // Suhu pemutusan darurat motor
 #define INVERTER_TEMP_CUTOFF_C  85.0f   // Suhu pemutusan darurat inverter
 #define BATT_MIN_VOLTAGE        60.0f   // Tegangan baterai minimum (Pack 72V)
-#define BATT_MAX_VOLTAGE        84.0f   // Tegangan baterai maksimum full charge
+#define BATT_MAX_VOLTAGE        84.5f   // Tegangan baterai maksimum full charge
 
 // ==========================================
 // KONFIGURASI TELEMETRI & JARINGAN
 // ==========================================
 #define MQTT_BROKER_HOST        "broker.emqx.io"
 #define MQTT_BROKER_PORT        1883
-#define MQTT_TELEMETRY_INTERVAL 500     // Kirim data setiap 500 ms (2 Hz)
+#define MQTT_TELEMETRY_INTERVAL 250     // Kirim data 4 Hz saat kecepatan tinggi
 
 #endif // CONFIG_H

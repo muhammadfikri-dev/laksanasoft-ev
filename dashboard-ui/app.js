@@ -1,6 +1,7 @@
 /**
  * ============================================================================
  * LAKSANASOFT-EV DASHBOARD HMI CLUSTER CONTROLLER
+ * High Performance Edition (Scale 160 km/h, 18kW Power Meter)
  * (c) 2026 PT. Laksana Digital Industri
  * ============================================================================
  */
@@ -106,25 +107,32 @@ function renderTelemetry(data) {
   const tmp = data.temperatures || {};
   const dia = data.diagnostics || {};
 
-  // 1. Kecepatan & Speedometer Gauge (Maksimal skala 120 km/h)
+  // 1. Kecepatan & Speedometer Gauge (Skala 0 - 160 km/h)
   const speed = dyn.speed_kmh || 0;
   elSpeedDisplay.innerText = Math.round(speed);
   
   // Speed Arc calculation (Stroke dashoffset from 450 to 0)
-  const maxSpeed = 120;
+  const maxSpeed = 160;
   const speedRatio = Math.min(speed / maxSpeed, 1.0);
   const arcOffset = 450 - (speedRatio * 450);
   elSpeedArcFill.style.strokeDashoffset = arcOffset;
 
+  // Ubah warna speedometer menjadi merah menyala saat > 100 km/h
+  if (speed >= 100) {
+    elSpeedArcFill.style.stroke = 'var(--accent-red)';
+  } else {
+    elSpeedArcFill.style.stroke = 'var(--cyan-primary)';
+  }
+
   // 2. State of Charge (SOC) Circle (Dasharray: 314)
-  const soc = nrg.soc !== undefined ? nrg.soc : 85;
+  const soc = nrg.soc !== undefined ? nrg.soc : 92;
   elSocValue.innerText = soc;
   const socOffset = 314 - ((soc / 100) * 314);
   elSocRing.style.strokeDashoffset = socOffset;
   elRangeValue.innerText = Math.round(nrg.range_km || (soc * 0.95));
 
   // 3. Metrik Baterai
-  elValVoltage.innerHTML = `${(nrg.pack_voltage || 74.0).toFixed(1)} <small>V</small>`;
+  elValVoltage.innerHTML = `${(nrg.pack_voltage || 75.0).toFixed(1)} <small>V</small>`;
   elValCurrent.innerHTML = `${(nrg.pack_current || 0.0).toFixed(1)} <small>A</small>`;
   const pwrKw = ((nrg.power_watts || (nrg.pack_voltage * nrg.pack_current) || 0) / 1000).toFixed(2);
   elValPower.innerHTML = `${pwrKw} <small>kW</small>`;
@@ -153,7 +161,7 @@ function renderTelemetry(data) {
   const isFault = (dia.fault_code && dia.fault_code !== 0) || sys.state === 'STATE_FAULT';
   elIndFault.classList.toggle('active', Boolean(isFault));
 
-  elStateMsgDisplay.innerText = `STATUS: ${sys.state || 'DRIVE READY'}`;
+  elStateMsgDisplay.innerText = `STATUS: ${sys.state || 'DRIVE READY (120 KM/H ED.)'}`;
   if (isFault) {
     elStateMsgDisplay.style.color = 'var(--accent-red)';
     elDiagFaultCode.innerText = `FAULT: ${dia.fault_msg || 'SYSTEM INTERLOCK'}`;
@@ -163,7 +171,7 @@ function renderTelemetry(data) {
     elStateMsgDisplay.style.color = 'var(--accent-green)';
     elDiagFaultCode.innerText = 'FAULTS: NONE (NORMAL)';
     elDiagFaultCode.style.color = 'var(--accent-green)';
-    elDiagFaultDesc.innerText = 'Sistem beroperasi optimal dalam batas aman.';
+    elDiagFaultDesc.innerText = 'Sistem beroperasi optimal dalam batas aman 120 km/jam.';
   }
 
   // 7. Suhu
@@ -184,15 +192,20 @@ function renderTelemetry(data) {
   }
 }
 
-// Simulasi Lokal Manual untuk Pengujian Langsung dari Tombol
+// Simulasi Demo Cepat
 function sendDemoThrottle(pct) {
+  const speed = (pct / 100) * 122.5; // Skala 100% gas = 122.5 km/jam
+  const rpm = Math.round((pct / 100) * 5800);
+  const current = (pct / 100) * 195.0; // 195A peak
+  const power = current * 74.0;
+  
   const mockPayload = {
     vin: "LAKSANAEV2026ID001",
     timestamp: Math.floor(Date.now() / 1000),
     system: { state: "STATE_DRIVE", mode: "SPORT", ready: true, side_stand: false, brake: false },
-    dynamics: { speed_kmh: pct * 0.85, motor_rpm: Math.round(pct * 45), throttle_pct: pct },
-    energy: { pack_voltage: 73.8, pack_current: pct * 0.6, power_watts: pct * 44.2, soc: 84, soh: 99, range_km: 81.2 },
-    temperatures: { motor_c: 46.5, inverter_c: 41.2, bms_c: 33.0 },
+    dynamics: { speed_kmh: speed, motor_rpm: rpm, throttle_pct: pct },
+    energy: { pack_voltage: 74.5, pack_current: current, power_watts: power, soc: 86, soh: 99, range_km: 78.5 },
+    temperatures: { motor_c: 54.0, inverter_c: 48.0, bms_c: 34.0 },
     diagnostics: { fault_code: 0, fault_msg: "NORMAL" }
   };
   renderTelemetry(mockPayload);
@@ -203,9 +216,9 @@ function sendDemoBrake() {
     vin: "LAKSANAEV2026ID001",
     timestamp: Math.floor(Date.now() / 1000),
     system: { state: "STATE_REGEN", mode: "SPORT", ready: true, side_stand: false, brake: true },
-    dynamics: { speed_kmh: 12.0, motor_rpm: 600, throttle_pct: 0 },
-    energy: { pack_voltage: 74.8, pack_current: -12.5, power_watts: -935, soc: 84, soh: 99, range_km: 81.2 },
-    temperatures: { motor_c: 47.0, inverter_c: 41.8, bms_c: 33.0 },
+    dynamics: { speed_kmh: 35.0, motor_rpm: 1200, throttle_pct: 0 },
+    energy: { pack_voltage: 76.5, pack_current: -45.0, power_watts: -3400, soc: 86, soh: 99, range_km: 78.5 },
+    temperatures: { motor_c: 53.0, inverter_c: 47.5, bms_c: 34.0 },
     diagnostics: { fault_code: 0, fault_msg: "NORMAL" }
   };
   renderTelemetry(mockPayload);

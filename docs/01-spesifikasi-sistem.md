@@ -1,109 +1,75 @@
-# 📘 Spesifikasi Sistem & Kalkulasi Rekayasa (Laksanasoft-EV)
+# 📘 Spesifikasi Sistem & Kalkulasi Rekayasa (High Performance Edition - 120 km/jam)
 
-Dokumen ini merinci spesifikasi teknis, kalkulasi performa mekanikal, kebutuhan daya elektrikal, dan parameter operasional untuk platform sepeda motor listrik Laksanasoft-EV.
-
----
-
-## 1. Parameter Fisik & Mekanikal Kendaraan
-
-| Parameter | Nilai / Satuan | Keterangan |
-| :--- | :--- | :--- |
-| **Tipe Rangka (Chassis)** | Tubular Steel Double Cradle (Konversi/Kustom) | Distribusi bobot optimal baterai di tengah (*mid-pack*) |
-| **Berat Kosong (Curb Weight)** | 95 kg | Termasuk motor, inverter, dan rangka |
-| **Berat Baterai (Battery Pack)** | 22 kg | 20S LiFePO4 / NMC dengan enclosure aluminium IP67 |
-| **Gross Vehicle Weight (GVW)** | 210 kg | Asumsi bobot pengendara + beban: 93 kg |
-| **Ukuran Ban Depan** | 90/90 - 14 inci | Rolling radius $r \approx 0.258\text{ m}$ |
-| **Ukuran Ban Belakang** | 100/90 - 14 inci | Rolling radius $r \approx 0.267\text{ m}$ |
-| **Koefisien Hambatan Udara ($C_d$)** | 0.65 | Profil aerodinamika sepeda motor komuter standar |
-| **Frontal Area ($A$)** | 0.75 m² | Luas penampang depan kendaraan + pengendara |
-| **Koefisien Gesek Gelinding ($C_{rr}$)** | 0.015 | Permukaan aspal rata |
+Dokumen ini merinci spesifikasi teknis dan kalkulasi fisika traksi yang telah dimodifikasi secara khusus agar sepeda motor listrik **Laksanasoft-EV** mampu mencapai dan mempertahankan kecepatan puncak **120 km/jam** secara stabil, efisien, dan aman.
 
 ---
 
-## 2. Kalkulasi Kebutuhan Daya (Tractive Effort)
+## 1. Kalkulasi Kebutuhan Daya Traksi untuk Kecepatan 120 km/jam
 
-Kebutuhan daya total pada roda belakang ($P_{total}$) dihitung berdasarkan penjumlahan gaya hambat utama:
+Untuk melaju pada kecepatan $v = 120\text{ km/jam} = 33.33\text{ m/s}$, hambatan aerodinamika meningkat secara eksponensial (kuadratik terhadap kecepatan):
 
-$$F_{total} = F_{rr} + F_{aero} + F_{grade} + F_{accel}$$
+$$F_{total} = F_{rr} + F_{aero} + F_{accel}$$
 
-### A. Komponen Gaya Hambat:
+### A. Perhitungan Gaya Hambat pada 120 km/jam:
 1. **Rolling Resistance ($F_{rr}$):**
-   $$F_{rr} = m \cdot g \cdot C_{rr} \cdot \cos(\theta)$$
-   Untuk jalan datar ($\theta = 0^\circ$):
-   $$F_{rr} = 210\text{ kg} \times 9.81\text{ m/s}^2 \times 0.015 = 30.9\text{ N}$$
+   - Bobot Total ($m$): $210\text{ kg}$ (Kendaraan 115 kg + Pengendara 95 kg)
+   - $F_{rr} = m \cdot g \cdot C_{rr} = 210 \times 9.81 \times 0.015 = \mathbf{30.9\text{ N}}$
 
 2. **Aerodynamic Drag ($F_{aero}$):**
+   - Densitas udara ($\rho$): $1.225\text{ kg/m}^3$
+   - Koefisien drag ($C_d$): $0.62$ (posisi tuck-in / menunduk aerodinamis)
+   - Luas penampang depan ($A$): $0.68\text{ m}^2$
+   - Kecepatan ($v$): $33.33\text{ m/s}$ ($120\text{ km/jam}$)
    $$F_{aero} = \frac{1}{2} \cdot \rho \cdot C_d \cdot A \cdot v^2$$
-   Pada kecepatan jelajah $v = 60\text{ km/jam} = 16.67\text{ m/s}$ (densitas udara $\rho = 1.225\text{ kg/m}^3$):
-   $$F_{aero} = 0.5 \times 1.225 \times 0.65 \times 0.75 \times (16.67)^2 = 82.9\text{ N}$$
+   $$F_{aero} = 0.5 \times 1.225 \times 0.62 \times 0.68 \times (33.33)^2 = \mathbf{287.0\text{ N}}$$
 
-3. **Daya pada Kecepatan Konstan 60 km/jam:**
-   $$F_{cruise} = F_{rr} + F_{aero} = 30.9 + 82.9 = 113.8\text{ N}$$
-   $$P_{wheel} = F_{cruise} \times v = 113.8\text{ N} \times 16.67\text{ m/s} = 1897\text{ Watt} \approx 1.9\text{ kW}$$
+3. **Total Gaya Traksi Konstan pada 120 km/jam:**
+   $$F_{cruise} = F_{rr} + F_{aero} = 30.9 + 287.0 = \mathbf{317.9\text{ N}}$$
 
-4. **Daya Akselerasi & Puncak (Tanjakan 15° & Akselerasi 0-60 km/jam dalam 6.5s):**
-   - Dibutuhkan daya puncak (*Peak Power*) minimum $\ge 5.0\text{ kW}$ pada roda.
-   - Efisiensi transmisi rantai/sabuk + motor: $\eta \approx 88\%$.
-   - **Daya Motor yang Dipilih:** 3000W Nominal / 6000W Peak.
+4. **Kebutuhan Daya Mekanikal Roda ($P_{wheel}$):**
+   $$P_{wheel} = F_{cruise} \times v = 317.9\text{ N} \times 33.33\text{ m/s} = \mathbf{10.595\text{ Watt}} \approx \mathbf{10.6\text{ kW}}$$
 
----
-
-## 3. Spesifikasi Powertrain & Sistem Penggerak
-
-### Motor Penggerak (Traction Motor)
-- **Tipe:** Brushless DC (BLDC) / Permanent Magnet Synchronous Motor (PMSM) Mid-Drive
-- **Tegangan Nominal:** 72V DC
-- **Daya Nominal:** 3000 Watt (3 kW)
-- **Daya Puncak (Peak Power):** 6000 Watt (6 kW @ 60 detik)
-- **Torsi Nominal:** 14.5 Nm
-- **Torsi Puncak (Peak Torque):** 45 Nm (pada shaft motor)
-- **Max RPM:** 4800 RPM (Field Weakening hingga 5800 RPM)
-- **Rasio Reduksi Gir/Rantai (Mid-Drive):** 1:4.2 (Sprocket Depan 14T, Sprocket Belakang 58T)
-- **Torsi Roda Belakang Efektif:** $45\text{ Nm} \times 4.2 = 189\text{ Nm}$
-- **Sensor:** Triple Hall Effect Sensors (120° phase angle) + NTC Thermistor 10k/100k internal.
-
-### Inverter / Motor Controller
-- **Tipe:** FOC (Field Oriented Control) Sinusoidal Wave Controller
-- **Model Rekomendasi:** Votol EM150-2 / FarDriver ND72530 / Kelly KLS7230S
-- **Rentang Tegangan Input:** 60V - 90V DC
-- **Arus Baterai Maksimal (Bus Current):** 100A Continual / 150A Peak
-- **Arus Fasa Maksimal (Phase Current):** 330A - 400A Peak
-- **Metode Komunikasi:** CAN Bus 2.0B / Lin / UART
-- **Proteksi Bawaan:** Over-voltage, Under-voltage, Over-temperature, Mosfet Short-circuit, Motor Lock-rotor protection.
+5. **Kebutuhan Daya Elektrikal Baterai ($P_{battery}$):**
+   - Efisiensi transmisi rantai/belt ($\eta_{trans} \approx 95\%$)
+   - Efisiensi motor & inverter FOC ($\eta_{elec} \approx 88\%$)
+   - Efisiensi total: $\eta_{total} \approx 0.95 \times 0.88 = 83.6\%$
+   $$P_{battery} = \frac{10.6\text{ kW}}{0.836} = \mathbf{12.68\text{ kW}}\text{ (Daya Jelajah Konstan 120 km/jam)}$$
+   - **Daya Puncak Akselerasi (Peak Power 0-100 km/jam dalam 5.2 detik):** $\mathbf{15.0\text{ kW} - 18.0\text{ kW}}$.
 
 ---
 
-## 4. Spesifikasi Sistem Penyimpanan Energi (Energy Storage System - ESS)
+## 2. Spesifikasi Powertrain Edisi 120 km/jam
 
-### Battery Pack Architecture
-- **Konfigurasi Sel:** 20S 3P (atau 20S 1P prismatic)
-- **Kimia Sel:** LiFePO4 (Lithium Iron Phosphate) atau NMC (Nickel Manganese Cobalt)
-- **Tegangan Nominal Pack:** $20 \times 3.6V = 72.0\text{V}$ (NMC) atau $20 \times 3.2V = 64.0\text{V}$ (LiFePO4)
-- **Tegangan Maksimal (Full Charge):** $20 \times 4.2V = 84.0\text{V}$ (NMC)
-- **Tegangan Minimal (Cut-off):** $20 \times 3.0V = 60.0\text{V}$ (NMC)
-- **Kapasitas Energi Total:** $72\text{V} \times 45\text{Ah} = 3.24\text{ kWh}$
-- **Max Continuous Discharge:** $2\text{C} = 90\text{A}$
-- **Max Peak Discharge (10s):** $3\text{C} = 135\text{A}$
-- **Standard Charge Current:** $0.3\text{C} = 13.5\text{A}$
-
-### Battery Management System (BMS)
-- **Tipe:** Smart Programmable BMS dengan antarmuka UART/RS485/CAN Bus
-- **Model Rekomendasi:** Daly Smart BMS 20S 150A / ANT BMS / JBD Smart BMS
-- **Fitur Balancing:** Active Balancer 1.2A atau Passive Bleeding Balancing
-- **Sensor Suhu:** 4x External NTC temperature probes (monitoring zona sel baterai).
+| Parameter | Spesifikasi Upgrade (120 km/jam) | Keterangan Rekayasa |
+| :--- | :--- | :--- |
+| **Motor Penggerak** | **QS Motor 138 90H V3 Mid-Drive** (atau QS 273 50H Hub Motor) | Daya Nominal: 4000W – 5000W<br>Daya Puncak: **15.000W – 18.000W (18 kW Peak)** |
+| **Torsi Puncak Motor** | **72 Nm** pada shaft motor | Torsi pada roda belakang: **216 Nm** (setelah reduksi gir) |
+| **Max RPM Motor** | 4500 RPM (Base) / **6200 RPM (Field Weakening)** | Kecepatan sudut tinggi untuk mencapai 120+ km/jam |
+| **Rasio Reduksi Gir** | **1 : 3.0** (Sprocket Depan 15T, Belakang 45T Tipe 428H) | Dikalibrasi khusus untuk top speed 120–125 km/jam |
+| **Inverter / Controller** | **FarDriver ND72680 / Votol EM-200-2 / EM-260** | Tegangan: 72V–88V DC<br>Arus Bus: **200A Continuous / 250A Peak**<br>Arus Fasa: **550A – 680A Phase Current** |
+| **Teknologi Inverter** | FOC Sine Wave + **Active Flux Weakening (Field Weakening)** | Meningkatkan RPM motor di atas tegangan *Back-EMF* normal |
+| **Kapasitas Baterai** | **72V 50Ah – 60Ah (3.6 – 4.3 kWh) High Discharge** | Sel Lithium NMC / LiFePO4 Grade A Discharge Rate $\ge 3\text{C}-5\text{C}$ |
+| **Smart BMS** | **Smart BMS 20S 200A Continuous / 300A Peak** | Active Balancer 2A, Antarmuka CAN Bus / Bluetooth |
+| **Proteksi HV** | **MCB DC 2P 150A – 200A + XT90-S Anti-Spark** | Mampu menahan lonjakan arus tarikan gas penuh 200A |
+| **Ukuran Kabel Daya** | **Kabel Silikon AWG 4 / AWG 2 (25 mm² - 35 mm²)** | Tahan panas 200°C untuk arus fasa dan baterai tinggi |
 
 ---
 
-## 5. Sistem Kontrol & Telemetri (VCU)
+## 3. Kalkulasi RPM & Rasio Gir pada 120 km/jam
 
-- **Mikrokontroler:** ESP32-S3-WROOM-1 (Xtensa dual-core 32-bit LX7, 240 MHz)
-- **Sistem Operasi Real-Time:** FreeRTOS
-- **Memori:** 512 KB SRAM + 8 MB Octal PSRAM + 16 MB SPI Flash
-- **Antarmuka I/O:**
-  - 2x ADC 12-bit terkalibrasi (APPS1 & APPS2 Throttle Input)
-  - 1x CAN Bus Transceiver (SN65HVD230 / TJA1050)
-  - 2x Hardware UART (BMS Communication & GPS NEO-6M/8M)
-  - 4x Digital Optocoupler Inputs (Brake switch, Side stand, Mode Switch, Reverse)
-  - 4x High-Side Mosfet/Relay Drivers (Main Contactor, Pre-Charge Relay, Headlight, Horn)
-  - 1x I2C / SPI (OLED / TFT HMI Cluster Interface)
-- **Konektivitas:** Wi-Fi 802.11 b/g/n, Bluetooth LE 5.0, Modul Eksternal SIMCOM A7670E (4G LTE Cat-1).
+- **Ukuran Ban Belakang:** 110/80 - 14 inci ($r_{wheel} = 0.267\text{ m}$, Keliling Ban $K = 2 \times \pi \times 0.267 = 1.677\text{ meter}$).
+- **Putaran Roda Belakang pada 120 km/jam:**
+  $$RPM_{roda} = \frac{120.000\text{ meter/jam}}{60 \times 1.677\text{ meter}} = \mathbf{1192.6\text{ RPM}}$$
+- **Putaran Motor pada Rasio 1 : 3.0:**
+  $$RPM_{motor} = 1192.6 \times 3.0 = \mathbf{3578\text{ RPM}}$$
+- **Margin Kecepatan Maksimum:**
+  Dengan kemampuan *Field Weakening* hingga **5000 - 6000 RPM**, sistem memiliki margin tenaga berlebih untuk menembus **125 - 130 km/jam**.
+
+---
+
+## 4. Mode Berkendara & Profil Kecepatan (Drive Modes)
+
+1. **Mode ECO:** Dibatasi pada $50\text{ km/jam}$ (Torsi $35\%$, Arus maks $35\text{A}$, Jarak tempuh maksimal $110\text{ km}$).
+2. **Mode URBAN:** Dibatasi pada $85\text{ km/jam}$ (Torsi $70\%$, Arus maks $90\text{A}$, Performa komuter harian lincah).
+3. **Mode SPORT (Unrestricted):** **Top Speed 120 - 125 km/jam** (Torsi $100\%$, Arus maks $200\text{A}-250\text{A}$ Peak, Akselerasi 0-100 km/jam < 5.5 detik).
+4. **Mode REVERSE:** Dibatasi pada $5\text{ km/jam}$ demi keselamatan.

@@ -1,37 +1,31 @@
-# 🛒 Panduan Belanja Alat & Bahan Mudah Dijangkau (Pasar Indonesia)
+# 🛒 Panduan Belanja Alat & Bahan Edisi 120 km/jam (Pasar Indonesia)
 
-Dokumen ini disusun khusus agar Anda dapat dengan mudah membeli seluruh komponen motor listrik di pasar lokal Indonesia (Toko Listrik, Toko Otomotif, Tokopedia, Shopee, Bukalapak) dengan harga terjangkau (*budget-friendly*) dan ketersediaan barang yang melimpah.
-
----
-
-## 1. Daftar Komponen Utama yang Mudah Dibeli di E-Commerce Lokal
-
-| No | Nama Komponen | Rekomendasi Part Populer Lokal | Alternatif Budget | Tempat Beli Populer | Estimasi Harga (IDR) |
-| :-: | :--- | :--- | :--- | :--- | :--- |
-| **1** | **Motor Penggerak** | **QS Motor 2000W - 3000W Hub Motor (Tipe Tromol / Cakram Velg 10/12/14")**<br>*Keuntungan: Langsung pasang di velg belakang matic tanpa perlu rantai & dudukan rumit.* | QS Motor 1000W - 1500W Hub Motor | Tokopedia / Shopee (Cari: "Hub Motor QS 3000W") | Rp 3.200.000 – Rp 5.500.000 |
-| **2** | **Inverter / Controller** | **Votol EM-50S / EM-100 / EM-150-2**<br>*Sangat populer di komunitas EV Indonesia, support kabel program USB.* | FarDriver ND72300 / Kelly KLS7218S | Tokopedia / Shopee (Cari: "Controller Votol EM100") | Rp 1.100.000 – Rp 2.200.000 |
-| **3** | **Baterai Pack 72V** | **Baterai Rakitan 72V 20S 30Ah - 45Ah NMC / LiFePO4 Prismatic (Grade A)** | Cell Lithium 18650 / 21700 (20S 6P) atau Pack Copotan Motor Listrik Gesits/Viar | Tokopedia / Shopee / Perakitan Baterai Lokal | Rp 4.800.000 – Rp 7.500.000 |
-| **4** | **Smart BMS** | **Daly Smart BMS 20S 60A / 100A Common Port (Bluetooth)** | JBD Smart BMS 20S / BMS Standar Hijau 60A | Tokopedia / Shopee (Cari: "Daly BMS 20S 72V") | Rp 550.000 – Rp 1.100.000 |
-| **5** | **Pengaman Utama (HV Disconnect)** | **MCB DC 2 Pole 63A - 125A (Merk: Nader / Chint / FEEO / Schneider)**<br>*Pengganti Contactor & Fuse industri, sangat aman, murah, dan berfungsi ganda sebagai saklar on/off utama.* | Saklar Pemutus Genset DC 100A | Toko Listrik / Tokopedia (Cari: "MCB DC 2P 100A") | Rp 85.000 – Rp 175.000 |
-| **6** | **DC-DC Stepdown** | **Modul DC-DC Converter 36V-72V ke 12V 10A / 20A Alumunium Casing** | Modul Stepdown DC 72V-12V 10A Plastik | Tokopedia / Shopee (Cari: "DC to DC 72V to 12V") | Rp 45.000 – Rp 95.000 |
-| **7** | **Handle Gas (Throttle)** | **Gas Motor Listrik 3-Speed + Tombol Mundur (Reverse)** | Gas Matic Sepeda Listrik Standar 3-Kabel | Toko Sepeda Listrik / E-Commerce | Rp 55.000 – Rp 135.000 |
-| **8** | **Kunci Kontak** | **Kunci Kontak Motor Honda Beat / Vario / Universal 2-Kabel** | Saklar Kunci Kontak Standar Motor | Toko Variasi Motor / Bengkel Lokal | Rp 25.000 – Rp 50.000 |
-| **9** | **Relay & Sekring LV** | **Relay Otomotif 12V 4-Pin / 5-Pin (Merk: Bosch, Denso, atau Hella 30A/40A) + Fuse Blade 10A/15A** | Relay Klakson Motor Lokal | Bengkel Motor / Toko Sparepart Mobil | Rp 20.000 – Rp 45.000 |
-| **10**| **Kabel Tegangan Tinggi** | **Kabel Silikon Tahan Panas AWG 8 atau AWG 6 (Baterai & Fasa Motor)** | Kabel NYAF 10 mm² / 16 mm² Tembaga Murni SNI (Merk: Supreme/Eterna/Jembo) | Toko Listrik Terdekat (Mudah Dicari) | Rp 25.000 – Rp 55.000 / meter |
-| **11**| **Kabel Sinyal / Kelistrikan** | **Kabel Otomotif AVSS 0.5 mm² & 0.85 mm² (Berbagai Warna)** | Kabel Serabut Tunggal 0.75 mm² Toko Listrik | Toko Audio Mobil / Toko Elektronik | Rp 3.000 – Rp 6.000 / meter |
-| **12**| **Speedometer Digital** | **Speedometer LCD Universal Digital Motor Listrik (One-Line / CAN Protocol)** | Speedometer Jarum Standar Motor Bawaan | Tokopedia / Shopee (Cari: "Speedometer Digital Votol") | Rp 160.000 – Rp 350.000 |
-| **13**| **Charger Baterai 72V** | **Smart Charger 72V 20S (84V Output) 5A - 10A Otomatis Cut-off** | Charger 72V 3A Standar | Tokopedia / Shopee (Cari: "Charger Baterai 72V 20S") | Rp 280.000 – Rp 650.000 |
-| **14**| **Konektor Daya** | **Konektor Anderson SB50 / SB120 atau XT90 Anti-Spark** | Skun Tembaga Tebal (Copper Cable Lug) SC10-6 / SC16-8 | Toko Listrik / Tokopedia | Rp 25.000 – Rp 60.000 |
+Dokumen ini merinci daftar belanja komponen berperforma tinggi yang terbukti mampu mencapai kecepatan **120 km/jam**, namun tetap **mudah dibeli di e-commerce lokal Indonesia (Tokopedia, Shopee, Bukalapak, Komunitas EV)**.
 
 ---
 
-## 2. Alat Kerja yang Mudah Ditemukan di Bengkel / Rumah
+## 1. Daftar Komponen Kunci untuk Target Kecepatan 120 km/jam
 
-Anda tidak memerlukan laboratorium mahal untuk merakit sistem ini. Perkakas berikut mudah ditemukan di toko teknik lokal (*hardware store*):
+| No | Nama Komponen | Rekomendasi Part 120 km/jam | Tempat Beli & Keyword Pencarian | Estimasi Harga (IDR) |
+| :-: | :--- | :--- | :--- | :--- |
+| **1** | **Motor Penggerak** | **QS Motor 138 90H V3 Mid-Drive (Gearbox/Belt Type)**<br>*Daya Peak 15kW - 18kW, torsi 72Nm, putaran tinggi hingga 6000 RPM (Paling direkomendasikan untuk 120 km/jam).*<br>*Alternatif:* **QS Motor 273 50H Hub Motor 4000W-8000W.** | Tokopedia / Shopee (Cari: "QS Motor 138 90H" atau "QS Motor 273") | Rp 6.800.000 – Rp 9.500.000 |
+| **2** | **Inverter / Controller** | **FarDriver ND72680 / ND72850** atau **Votol EM-200-2 / EM-260**<br>*Support Field Weakening (Flux Weakening) 200A-250A Bus Current, 550A-680A Phase Current.* | Tokopedia / Shopee (Cari: "FarDriver ND72680" atau "Votol EM200") | Rp 2.650.000 – Rp 4.200.000 |
+| **3** | **Baterai Pack 72V** | **Baterai 72V 50Ah – 60Ah High Discharge (Cell CATL / CALB / Samsung 50S / Lishen 21700)**<br>*Pastikan continuous discharge rate $\ge 150\text{A}$ dan peak $\ge 250\text{A}$.* | Spesialis Baterai EV Lokal / Tokopedia (Cari: "Baterai Motor Listrik 72V 50Ah") | Rp 7.800.000 – Rp 11.500.000 |
+| **4** | **Smart BMS** | **Smart BMS 20S 200A – 250A Peak (Daly / JK BMS / ANT BMS) dengan Active Balancer** | Tokopedia / Shopee (Cari: "Daly Smart BMS 200A 20S") | Rp 850.000 – Rp 1.650.000 |
+| **5** | **Pengaman Utama (HV)** | **MCB DC 2-Pole 150A – 200A (Merk: Nader / Chint / FEEO / Schneider DC)** | Toko Listrik / Tokopedia (Cari: "MCB DC 2P 150A" atau "MCB DC 200A") | Rp 110.000 – Rp 220.000 |
+| **6** | **Konektor Daya Berat** | **Konektor Anderson SB120 / SB175 atau Dual XT90-S Anti-Spark** | Tokopedia / Shopee (Cari: "Anderson SB120") | Rp 65.000 – Rp 120.000 |
+| **7** | **Kabel Tegangan Tinggi** | **Kabel Silikon Tahan Panas 200°C AWG 4 / AWG 2 (25 mm² - 35 mm²)** | Toko Audio Mobil / E-Commerce (Cari: "Kabel Silikon AWG 4") | Rp 65.000 – Rp 95.000 / meter |
+| **8** | **Transmisi Rantai** | **Rantai Baja Tipe 428H / 520 O-Ring Heavy Duty + Sprocket Depan 15T & Belakang 45T** | Bengkel Motor / Toko Sparepart Rantai Racing (SSS/DID) | Rp 280.000 – Rp 480.000 |
+| **9** | **Pengereman Kecepatan Tinggi** | **Kaliper Rem Depan Double Disc 4-Piston (Nissin / Brembo Clone) + Selang Rem Braided Steel** | Toko Variasi Motor / Tokopedia | Rp 450.000 – Rp 950.000 |
+| **10**| **Ban Kecepatan Tinggi** | **Ban Tubeless Speed Rating P / Q (Max 150-160 km/jam) Ukuran 90/80-14 & 110/80-14** *(Pirelli Diablo Rosso Scooter / Michelin City Grip 2 / Maxxis)* | Toko Ban Motor Lokal | Rp 550.000 – Rp 900.000 |
+| **11**| **DC-DC Stepdown** | **Modul DC-DC Converter 72V ke 12V 20A Alumunium Casing Tahan Air (240W)** | Tokopedia / Shopee | Rp 85.000 – Rp 150.000 |
+| **12**| **Charger Cepat (Fast)** | **Smart Charger 72V 20S Output 84V 10A – 15A Otomatis Cut-off** | Tokopedia / Shopee | Rp 650.000 – Rp 1.200.000 |
 
-1. **Tang Press Skun Kabel (Crimping Tool) atau Tang Kombinasi:** Untuk menjepit skun ke kabel tebal.
-2. **Multitester Digital (Avometer):** Merk Sanwa, Heles, Aneng, atau Digital Multimeter murah Rp 60.000-an.
-3. **Solder Listrik 40W - 60W & Timah Solder:** Untuk menyambung jalur sensor dan kabel sinyal.
-4. **Isolasi Bakar (Heat Shrink Tube) & Selotip Listrik Unibel / Nitto:** Untuk isolasi sambungan kedap air.
-5. **Korek Gas / Korek Api:** Untuk memanaskan isolasi bakar (*heat shrink*).
-6. **Obeng Set (+ dan -) & Kunci Pas / Ring (Ukuran 8, 10, 12, 14 mm):** Untuk memasang terminal motor dan sasis.
+---
+
+## 2. Tips Tuning Software Controller untuk Top Speed 120 km/jam
+
+1. **Aktifkan Fitur Flux Weakening (Field Weakening):**
+   - Pada aplikasi software FarDriver atau Votol (via PC/Bluetooth), naikkan nilai `Flux Weakening Current` secara bertahap (mulai dari 30A hingga 80A). Fitur ini memperlemah medan magnet rotor sehingga motor mampu berputar melampaui batas *Back-EMF* pada tegangan 72V.
+2. **Set Arus Fasa (Phase Current):** Set pada $450\text{A} - 550\text{A}$ untuk akselerasi awal yang responsif.
+3. **Set Arus Baterai (Bus Current):** Set pada $150\text{A} - 200\text{A}$ sesuai batas kemampuan debit (*C-rate*) baterai pack Anda.

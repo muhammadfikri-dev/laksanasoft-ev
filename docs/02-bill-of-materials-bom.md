@@ -1,65 +1,38 @@
 # 🛒 Bill of Materials (BOM) & Daftar Alat Kerja
 
-Dokumen ini merinci seluruh komponen, perangkat keras, perkakas (*tools*), dan estimasi anggaran biaya untuk membangun sistem **Laksanasoft-EV**.
+Dokumen ini merinci komponen standar industri maupun opsi alternatif ramah kantong (*budget-friendly*) yang sangat mudah dijangkau di pasar Indonesia (Tokopedia, Shopee, Toko Listrik & Otomotif lokal).
+
+> 💡 **Panduan Belanja Spesifik Pasar Indonesia:** Lihat [Panduan Belanja Lokal Indonesia](02b-panduan-belanja-lokal-indonesia.md) untuk kata kunci pencarian toko, tips memilih merk lokal, dan alternatif murah.
 
 ---
 
-## 1. Daftar Komponen Elektrikal & Powertrain (BOM)
+## 1. Daftar Komponen Elektrikal & Powertrain (BOM Lengkap)
 
-| Kategori | Nama Komponen / Part | Spesifikasi Teknis | Qty | Satuan | Estimasi Harga (IDR) |
+| Kategori | Nama Komponen / Part | Opsi Standar / Rekomendasi | Alternatif Mudah Dicari (Lokal) | Qty | Estimasi Harga (IDR) |
 | :--- | :--- | :--- | :--- | :--- | :--- |
-| **Powertrain** | QS Motor 3000W 138 70H Mid Drive | 72V 3000W Rated, 6000W Peak, 4800 RPM, Encoder/Hall | 1 | Unit | Rp 6.800.000 |
-| **Inverter** | Controller FOC Votol EM150-2 / FarDriver | 72V-90V, 150A Bus Current, 350A Phase Current, CAN | 1 | Unit | Rp 2.750.000 |
-| **Baterai** | Cell Lithium NMC / LiFePO4 Prismatic | 3.7V 45Ah Grade A (20 Sel Konfigurasi 20S1P) | 20 | Sel | Rp 7.500.000 |
-| **BMS** | Smart BMS 20S 150A Peak Daly/ANT | UART/CAN Communication, Bluetooth App, 4x Temp Probe | 1 | Unit | Rp 1.450.000 |
-| **Sistem HV** | Main DC Contactor (Trombetta / Kilovac Clone) | Coil 12V DC, Kontak 100V 200A Continuous | 1 | Unit | Rp 450.000 |
-| **Sistem HV** | Pre-Charge Relay & Ceramic Resistor | Relay 12V 10A, Resistor 100 Ohm 50W Aluminium Housed | 1 | Set | Rp 85.000 |
-| **Sistem HV** | Fuse Tegangan Tinggi & Fuse Holder | ANL Fuse 150A 125V DC + Holder Isolator Bakelit | 1 | Set | Rp 120.000 |
-| **Sistem HV** | Manual Service Disconnect (MSD) Switch | Amphenol Style HV Plug Switch 150A | 1 | Unit | Rp 350.000 |
-| **Konversi Daya** | DC-DC Step-Down Converter Terisolasi | Input 48V-90V DC -> Output 12V DC 20A (240W) | 1 | Unit | Rp 250.000 |
-| **VCU Core** | Board ESP32-S3-WROOM-1 DevKit | Dual Core 240MHz, 16MB Flash, 8MB PSRAM | 1 | Unit | Rp 130.000 |
-| **VCU PCB** | Custom VCU Mainboard PCB (4-Layer) | Automotive-grade isolated inputs, CAN Transceiver, Buck 5V/3.3V | 1 | Board | Rp 300.000 |
-| **Transceiver** | CAN Bus Module SN65HVD230 | 3.3V CAN Transceiver dengan 120 Ohm Termination | 1 | Modul | Rp 35.000 |
-| **Telemetri** | SIMCOM A7670E 4G LTE Cat-1 Module | Modul Seluler 4G + GNSS/GPS Antenna | 1 | Modul | Rp 280.000 |
-| **Input Driver** | Dual-Hall Electronic Throttle Handlebar | Output APPS1 (0.8V-4.2V) & APPS2 (4.2V-0.8V Inverted) | 1 | Set | Rp 220.000 |
-| **Sensor Rem** | Hydraulic E-Brake Pressure Switch / Hall | NC/NO switch cutoff 12V | 2 | Unit | Rp 150.000 |
-| **HMI Display** | 4.3" Round/Rectangular IPS TFT Display | SPI / RGB Interface dengan ESP32 Touchscreen Support | 1 | Unit | Rp 380.000 |
-| **Kabel HV** | Kabel Silikon Fleksibel Oranye Tahan Panas | 25 mm² (4 AWG) Tahan Panas 200°C 600V (Baterai-Inverter) | 4 | Meter | Rp 320.000 |
-| **Kabel Fasa** | Kabel Silikon Fasa Motor Kuning/Hijau/Biru | 16 mm² (6 AWG) Tahan Panas 200°C (Inverter-Motor) | 3 | Meter | Rp 240.000 |
-| **Kabel LV** | Wiring Harness Otomotif AVSS | 0.5 mm² & 0.85 mm² Multicore Shielded Wire | 1 | Set | Rp 180.000 |
-| **Konektor** | Anderson SB120 / Amphenol HVSL630 | Konektor Quick Disconnect Baterai Rating 120A | 2 | Pasang | Rp 220.000 |
-| **Enclosure** | Box Baterai Aluminium 3mm Kustom | Finishing Powder Coating + Gasket Karet Silikon IP67 | 1 | Unit | Rp 850.000 |
-| **Total Estimasi** | | | | | **± Rp 25.830.000** |
+| **Powertrain** | Motor Traksi Listrik | QS Motor 138 70H Mid-Drive 3000W (Rantai) | **QS Motor 2000W-3000W Hub Motor (Tromol/Cakram Velg 10-14")** *(Plug-and-play ke matic tanpa ubah dudukan sasis)* | 1 Unit | Rp 3.200.000 – Rp 6.800.000 |
+| **Inverter** | FOC Motor Controller | Votol EM150-2 / FarDriver ND72530 | **Votol EM-50S / EM-100 (Support USB Tuning)** | 1 Unit | Rp 1.100.000 – Rp 2.750.000 |
+| **Baterai** | Battery Pack 72V 20S | Baterai Prismatic 72V 45Ah NMC/LiFePO4 Baru | **Baterai Rakitan 72V 20S 30Ah-40Ah (Cell 21700 / NMC)** | 1 Unit / Pack | Rp 4.800.000 – Rp 7.500.000 |
+| **BMS** | Battery Management System | Daly Smart BMS 20S 150A Peak (CAN/UART) | **Daly Smart BMS 20S 60A/100A Bluetooth / JBD Smart** | 1 Unit | Rp 550.000 – Rp 1.450.000 |
+| **Proteksi HV** | Pemutus Arus & Saklar Utama | Contactor DC 72V 200A + Precharge Relay | **MCB DC 2-Pole 63A - 125A (Nader / Chint / FEEO / Schneider)** *(Mudah dibeli di toko listrik / PLTS)* | 1 Unit | Rp 85.000 – Rp 175.000 |
+| **Anti-Spark** | Pengaman Percikan Baterai | Modul Pre-Charge Elektronik | **Konektor XT90-S Anti-Spark (Resistor Internal)** | 2 Pasang | Rp 35.000 – Rp 70.000 |
+| **Konversi Daya** | DC-DC Step-Down Converter | DC-DC Terisolasi 72V -> 12V 20A Alumunium | **Modul DC-DC 36V-72V ke 12V 10A (Banyak di toko sepeda listrik)** | 1 Unit | Rp 45.000 – Rp 95.000 |
+| **Handle Gas** | Electronic Throttle | Dual-Hall APPS Throttle Khusus | **Gas Motor Listrik 3-Speed + Tombol Mundur (Reverse)** | 1 Set | Rp 55.000 – Rp 135.000 |
+| **Kunci Kontak** | Ignition Switch | Switch Kunci Kontak Otomotif | **Kunci Kontak Universal Motor Honda Beat/Vario 2-Kabel** | 1 Unit | Rp 25.000 – Rp 50.000 |
+| **Relay & Fuse** | Kelistrikan 12V | Automotive Fuse Box 4-Way + Relay Bosch 12V | **Relay Klakson 12V 4-Pin / 5-Pin + Sekring Blade 10A/15A** | 1 Set | Rp 35.000 – Rp 80.000 |
+| **Speedometer** | Instrument Cluster | Layar TFT ESP32 VCU Kustom | **Speedometer LCD Digital Universal Motor Listrik (One-Line)** | 1 Unit | Rp 160.000 – Rp 380.000 |
+| **Kabel HV** | Kabel Daya Utama | Kabel Silikon Oranye AWG 6 / AWG 8 | **Kabel Tembaga NYAF 10 mm² / 16 mm² SNI (Supreme/Eterna)** | 3 - 4 Meter | Rp 75.000 – Rp 180.000 |
+| **Kabel Sinyal** | Wiring Harness | Kabel Otomotif AVSS 0.5 mm² & 0.85 mm² | **Kabel Serabut Tunggal 0.75 mm² Toko Listrik / Audio** | 1 Set | Rp 35.000 – Rp 80.000 |
+| **Charger** | Pengisi Daya 72V | Smart Charger 72V 15A Fast Charging | **Charger 72V 20S (84V Puncak) 5A Otomatis Cut-off** | 1 Unit | Rp 280.000 – Rp 650.000 |
+| **Total Estimasi Paket Budget:** | | | | | **± Rp 10.500.000 – Rp 14.500.000** |
+| **Total Estimasi Paket Performa Tinggi:** | | | | | **± Rp 20.000.000 – Rp 25.800.000** |
 
 ---
 
-## 2. Daftar Alat Kerja & Fasilitas Perakitan (*Tools Required*)
+## 2. Alat Kerja Sederhana yang Digunakan
 
-### A. Alat Kelistrikan & Elektronika
-1. **Hydraulic Cable Lug Crimper (10 - 120 mm²):**
-   Untuk melakukan penekanan (*crimping*) skun kabel tembaga tebal pada kabel baterai dan fasa motor agar resistansi kontak serendah mungkin (< 0.1 mΩ).
-2. **Digital Multimeter True RMS (Rating CAT III 1000V):**
-   Untuk pengukuran tegangan bus DC, impedansi jalur, kontinuitas ground, dan sinyal analog throttle.
-3. **Dual-Channel Digital Storage Oscilloscope (DSO):**
-   Untuk analisis sinyal PWM controller, pembacaan sinyal sensor Hall, dan decoding paket CAN Bus.
-4. **Soldering Station 80W - 100W dengan Suhu Teratur:**
-   Untuk penyolderan komponen PCB, sensor harness, dan penyambungan kabel sinyal dengan timah *lead-free*.
-5. **Heat Gun & Heat Shrink Dual-Wall (Adhesive Lined):**
-   Untuk isolasi kabel kedap air (*waterproof sealing*).
-6. **Spot Welder Baterai / TIG Welder:**
-   (Jika menggunakan sel silindris 21700/18650) atau Torsi Kunci Hexagon terkalibrasi untuk terminal sel prisma.
-
-### B. Alat Keselamatan Kerja (Personal Protective Equipment - PPE)
-1. **Sarung Tangan Isolasi Listrik Kelas 0 (Rating 1000V AC / 1500V DC):**
-   Wajib digunakan saat merangkai sel baterai dan menghubungkan busbar utama.
-2. **Kacamata Pelindung Polikarbonat (Safety Goggles / Face Shield).**
-3. **Alat Pemadam Api Ringan (APAR) Tipe CO2 atau Lithium Fire Extinguisher (F-500).**
-4. **Matras Isolasi Karet (Anti-Static & High Voltage Insulation Mat).**
-
----
-
-## 3. Komponen Tambahan Mekanikal & Sasis
-- Dudukan motor *mid-drive* plat baja/aluminium CNC T6-6061 tebal 8mm.
-- Rantai baja tipe 428H / Sabuk timing belt Gates Carbon Drive.
-- Sprocket depan 14T baja karbon dan sprocket belakang 58T.
-- Baut *grade 8.8* dan *nyloc anti-vibration nuts* untuk seluruh mounting dudukan baterai dan motor.
+1. **Multimeter Digital (Avometer):** Untuk mengukur tegangan baterai, kontinuitas ground, dan sinyal gas.
+2. **Solder & Timah:** Untuk menyambung kabel sensor dan isolasi sambungan.
+3. **Tang Press Skun / Tang Kombinasi:** Untuk memasang terminal skun kabel tembaga.
+4. **Isolasi Bakar (Heat Shrink) & Selotip Listrik:** Melindungi sambungan dari air dan gesekan.
+5. **Kunci Pas / Ring (8, 10, 12, 14, 17, 19, 22 mm):** Untuk memasang as roda hub motor dan mur sasis.

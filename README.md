@@ -134,6 +134,11 @@ python vehicle_simulator.py
 
 ## 📄 Lisensi
 
-Proyek ini dilisensikan di bawah **MIT License**. Lihat file [LICENSE](LICENSE) untuk rincian lengkap.
+Didistribusikan untuk kemajuan ekosistem kendaraan listrik cerdas Indonesia oleh **PT. Laksana Digital Industri**.
 
-Dikembangkan untuk kemajuan ekosistem kendaraan listrik cerdas Indonesia oleh **PT. Laksana Digital Industri**.
+---
+
+<p align="center">
+  Dibuat dengan ❤️ oleh <b>Muhammad Fikri Dev</b>
+</p>
+

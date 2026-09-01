@@ -2,7 +2,8 @@
  * ============================================================================
  * LAKSANASOFT-EV: VEHICLE CONTROL UNIT (VCU) MAIN FIRMWARE
  * Platform: ESP32-S3 Dual Core @ 240MHz (FreeRTOS)
- * Arsitektur: Dual-Core Task Separation (Safety-Critical & Telemetry)
+ * Arsitektur: Dual-Core Task Separation (Safety Control + Smart ADAS & IoT)
+ * Fitur: 120 km/h Tuning, 6-DOF IMU, Traction Control (TCS), Smart Keyless & Dual BMS
  * Hak Cipta (c) 2026 PT. Laksana Digital Industri
  * ============================================================================
  */
@@ -15,6 +16,9 @@
 #include "motor_controller.h"
 #include "can_manager.h"
 #include "telemetry_service.h"
+#include "imu_tcs_manager.h"
+#include "keyless_manager.h"
+#include "dual_battery_manager.h"
 
 // Objek Sub-Sistem
 ThrottleHandler throttleHandler;
@@ -22,10 +26,17 @@ BmsDriver bmsDriver;
 MotorController motorController;
 CanManager canManager;
 TelemetryService telemetryService;
+ImuTcsManager imuTcsManager;
+KeylessManager keylessManager;
+DualBatteryManager dualBatteryManager;
 
 // State & Telemetri Global Kendaraan
 VehicleTelemetry g_telemetry;
 portMUX_TYPE g_telemetryMutex = portMUX_INITIALIZER_UNLOCKED;
+
+// State Baterai Ganda
+BatteryPackState g_packA = {true, 75.6f, 0.0f, 92, 33.0f, 99};
+BatteryPackState g_packB = {true, 75.4f, 0.0f, 90, 32.5f, 99};
 
 // Waktu transisi status
 uint32_t g_prechargeStartTimeMs = 0;
@@ -84,22 +95,33 @@ void ControlLoopTask(void* pvParameters) {
 
         readDigitalSensors(localTel);
 
-        // 1. Baca & Validasi Throttle APPS
+        // 1. Baca Sensor Inersia IMU 6-DOF
+        bool crashDetected = false;
+        imuTcsManager.update(localTel.leanAngleDeg, localTel.pitchAngleDeg, crashDetected);
+        if (crashDetected && localTel.currentState == STATE_DRIVE) {
+            localTel.activeFault = FAULT_CRASH_TIPOVER;
+            localTel.currentState = STATE_FAULT;
+        }
+
+        // 2. Baca & Validasi Throttle APPS
         FaultCode throttleFault = FAULT_NONE;
         float rawThrottle = 0.0f;
         bool appsValid = throttleHandler.process(rawThrottle, localTel.apps1Voltage, localTel.apps2Voltage, throttleFault);
 
-        // 2. Mesin Status Utama Kendaraan (State Machine)
+        // 3. Mesin Status Utama Kendaraan (State Machine)
         switch (localTel.currentState) {
             case STATE_BOOT:
                 digitalWrite(PIN_MAIN_CONTACTOR, LOW);
                 digitalWrite(PIN_PRECHARGE_RELAY, LOW);
                 motorController.emergencyStop();
                 
-                // Mulai Precharge jika sensor awal dalam batas normal
-                localTel.currentState = STATE_PRECHARGE;
-                g_prechargeStartTimeMs = millis();
-                digitalWrite(PIN_PRECHARGE_RELAY, HIGH);
+                // Mulai Precharge jika keyless authorized & sensor normal
+                if (keylessManager.isAuthorized()) {
+                    localTel.isKeylessUnlocked = true;
+                    localTel.currentState = STATE_PRECHARGE;
+                    g_prechargeStartTimeMs = millis();
+                    digitalWrite(PIN_PRECHARGE_RELAY, HIGH);
+                }
                 break;
 
             case STATE_PRECHARGE:
@@ -149,9 +171,20 @@ void ControlLoopTask(void* pvParameters) {
                     break;
                 }
 
-                // Hitung Permintaan Torsi Sesuai Mode
+                // Hitung Permintaan Torsi Dasar Sesuai Mode (120 km/jam scale)
                 localTel.throttlePercent = rawThrottle;
                 localTel.targetTorquePercent = throttleHandler.mapTorqueToMode(rawThrottle, localTel.currentMode);
+
+                // Kendali Traksi Aktif (TCS) & Pembatasan Torsi Menikung (Lean Angle)
+                bool tcsActive = false;
+                localTel.targetTorquePercent = imuTcsManager.processTractionControl(
+                    localTel.targetTorquePercent,
+                    localTel.vehicleSpeedKmh,
+                    localTel.motorRpm,
+                    localTel.leanAngleDeg,
+                    tcsActive
+                );
+                localTel.isTcsActive = tcsActive;
 
                 // Thermal Derating Protection
                 if (localTel.motorTempC >= MOTOR_TEMP_WARN_C) {
@@ -175,7 +208,7 @@ void ControlLoopTask(void* pvParameters) {
                     motorController.setRegenDemand(0.0f);
                     localTel.currentState = STATE_DRIVE;
                 } else {
-                    motorController.setRegenDemand(50.0f); // 50% kekuatan pengereman listrik
+                    motorController.setRegenDemand(60.0f); // 60% pengereman regeneratif berkecepatan tinggi
                 }
                 break;
 
@@ -183,7 +216,7 @@ void ControlLoopTask(void* pvParameters) {
                 motorController.emergencyStop();
                 localTel.isReady = false;
                 // Pemulihan otomatis jika kondisi fault telah teratasi dan gas dilepas penuh
-                if (rawThrottle < 1.0f && appsValid && !localTel.isSideStandDown) {
+                if (rawThrottle < 1.0f && appsValid && !localTel.isSideStandDown && !crashDetected) {
                     localTel.activeFault = FAULT_NONE;
                     localTel.currentState = STATE_STANDBY;
                 }
@@ -223,21 +256,27 @@ void TelemetryLoopTask(void* pvParameters) {
         VehicleTelemetry snapTel = g_telemetry;
         portEXIT_CRITICAL(&g_telemetryMutex);
 
-        // 1. Baca Data Paket Baterai dari Smart BMS
+        // 1. Baca Data Dual Baterai Pack Modular
+        dualBatteryManager.update(g_packA, g_packB, snapTel);
+        snapTel.packASoc = g_packA.socPercent;
+        snapTel.packBSoc = g_packB.socPercent;
+        snapTel.packAVoltage = g_packA.voltage;
+        snapTel.packBVoltage = g_packB.voltage;
+
+        // 2. Baca Data Paket Baterai dari Smart BMS
         bmsDriver.update(snapTel);
 
-        // 2. Periksa Pesan CAN Bus & Broadcast Telemetri
+        // 3. Periksa Pesan CAN Bus & Broadcast Telemetri
         canManager.checkIncomingMessages(snapTel);
         canManager.broadcastStatus(snapTel);
 
-        // 3. Estimasi Sisa Jarak Tempuh (Range Estimation)
-        // Konsumsi rata-rata komuter: ~30 Wh/km. Baterai 3240 Wh total
-        float remainingEnergyWh = (snapTel.batterySocPercent / 100.0f) * 3240.0f;
-        snapTel.estimatedRangeKm = remainingEnergyWh / 30.0f;
+        // 4. Estimasi Sisa Jarak Tempuh (Range Estimation)
+        float remainingEnergyWh = (snapTel.batterySocPercent / 100.0f) * 3600.0f;
+        snapTel.estimatedRangeKm = remainingEnergyWh / 35.0f; // ~35 Wh/km
 
         snapTel.uptimeSeconds = millis() / 1000;
 
-        // 4. Publikasi Data ke Cloud MQTT / Wi-Fi
+        // 5. Publikasi Data ke Cloud MQTT / Wi-Fi
         telemetryService.process(snapTel);
 
         portENTER_CRITICAL(&g_telemetryMutex);
@@ -256,7 +295,8 @@ void setup() {
     delay(500);
 
     Serial.println("=================================================");
-    Serial.println("  LAKSANASOFT-EV VCU FIRMWARE v1.0.0 INITIALIZING ");
+    Serial.println("  LAKSANASOFT-EV SMART VCU 2.0 (120 KM/H ED.)    ");
+    Serial.println("  ADAS TCS + 6-DOF IMU + SMART KEYLESS ACTIVE    ");
     Serial.println("  (c) 2026 PT. Laksana Digital Industri           ");
     Serial.println("=================================================");
 
@@ -266,14 +306,18 @@ void setup() {
     motorController.init();
     canManager.init();
     telemetryService.init();
+    imuTcsManager.init();
+    keylessManager.init();
+    dualBatteryManager.init();
 
     // Inisialisasi struktur telemetri awal
     memset(&g_telemetry, 0, sizeof(VehicleTelemetry));
     g_telemetry.currentState = STATE_BOOT;
-    g_telemetry.currentMode = MODE_URBAN;
-    g_telemetry.batterySocPercent = 100;
-    g_telemetry.batterySohPercent = 100;
-    g_telemetry.packVoltage = 74.2f;
+    g_telemetry.currentMode = MODE_SPORT;
+    g_telemetry.batterySocPercent = 95;
+    g_telemetry.batterySohPercent = 99;
+    g_telemetry.packVoltage = 76.5f;
+    g_telemetry.isKeylessUnlocked = true;
 
     // Menjalankan Control Loop pada Core 0 (Priority 5 - Highest)
     xTaskCreatePinnedToCore(
@@ -297,10 +341,9 @@ void setup() {
         1
     );
 
-    Serial.println("[VCU] Sistem Dual-Core FreeRTOS berhasil diaktifkan.");
+    Serial.println("[VCU] Sistem Cerdas Dual-Core FreeRTOS berhasil diaktifkan.");
 }
 
 void loop() {
-    // Loop kosong karena seluruh eksekusi dikelola oleh Task FreeRTOS
     vTaskDelay(pdMS_TO_TICKS(1000));
 }

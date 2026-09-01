@@ -17,9 +17,9 @@ enum VehicleState {
 
 // Mode Berkendara (Drive Modes)
 enum DriveMode {
-    MODE_ECO = 0,           // Hemat daya, maks 45 km/jam, 40% torsi
-    MODE_URBAN,             // Harian seimbang, maks 70 km/jam, 75% torsi
-    MODE_SPORT,             // Performa penuh, 100% torsi & respons instan
+    MODE_ECO = 0,           // Hemat daya, maks 50 km/jam, 35% torsi
+    MODE_URBAN,             // Harian seimbang, maks 85 km/jam, 70% torsi
+    MODE_SPORT,             // Performa penuh 120+ km/jam (Active Flux Weakening)
     MODE_REVERSE            // Gigi mundur aman, maks 5 km/jam
 };
 
@@ -31,14 +31,15 @@ enum FaultCode {
     FAULT_BRAKE_PRIORITY,   // Gas & rem ditekan bersamaan (BOA interlock)
     FAULT_BMS_UNDERVOLTAGE, // Tegangan baterai di bawah 60.0V
     FAULT_BMS_OVERVOLTAGE,  // Tegangan baterai di atas 84.5V
-    FAULT_OVER_TEMPERATURE, // Suhu motor atau inverter melebihi batas aman
+    FAULT_OVER_TEMPERATURE, // Suhu motor atau inverter melebihi batas aman (>95°C)
     FAULT_CAN_TIMEOUT,      // Hilang komunikasi dengan inverter / BMS
-    FAULT_EMERGENCY_STOP    // Tombol darurat aktif
+    FAULT_EMERGENCY_STOP,   // Tombol darurat aktif
+    FAULT_CRASH_TIPOVER     // Sensor IMU mendeteksi motor terjatuh (>60°)
 };
 
-// Struktur Data Telemetri & Status Kendaraan Lengkap
+// Struktur Data Telemetri & Status Kendaraan Lengkap (Smart VCU 2.0)
 struct VehicleTelemetry {
-    // Status Sistem
+    // Status Sistem & Keamanan Cerdas
     VehicleState currentState;
     DriveMode currentMode;
     FaultCode activeFault;
@@ -46,24 +47,36 @@ struct VehicleTelemetry {
     bool isSideStandDown;
     bool isBrakeEngaged;
     bool isReverseActive;
+    bool isTcsActive;            // Status Intervensi Traction Control
+    bool isKeylessUnlocked;      // Status Otentikasi Smart Keyless (NFC/BLE)
+    
+    // Sensor Inersia 6-Axis (IMU)
+    float leanAngleDeg;          // Sudut Kemiringan Menikung (Roll)
+    float pitchAngleDeg;         // Sudut Tanjakan/Turunan (Pitch)
     
     // Input Pengendali
-    float throttlePercent;      // Nilai gas terhitung (0.0 - 100.0%)
+    float throttlePercent;       // Nilai gas terhitung (0.0 - 100.0%)
     float apps1Voltage;
     float apps2Voltage;
     
-    // Powertrain & Dinamika
+    // Powertrain & Dinamika (120 km/jam Scale)
     float vehicleSpeedKmh;
     int16_t motorRpm;
     float phaseCurrentAmp;
     float targetTorquePercent;
     
-    // Sistem Energi (BMS Feedback)
+    // Sistem Energi Ganda (Dual Smart Battery Architecture)
     float packVoltage;
     float packCurrentAmp;
     float packPowerWatts;
     uint8_t batterySocPercent;
     uint8_t batterySohPercent;
+    
+    uint8_t packASoc;            // Pack A Modular SOC (%)
+    uint8_t packBSoc;            // Pack B Modular SOC (%)
+    float packAVoltage;
+    float packBVoltage;
+    
     float cellMaxVoltage;
     float cellMinVoltage;
     uint16_t cellImbalanceMv;
@@ -74,7 +87,7 @@ struct VehicleTelemetry {
     float bmsMaxTempC;
     float ambientTempC;
     
-    // Metrik Perjalanan
+    // Metrik Perjalanan & Navigasi
     float tripDistanceKm;
     float totalOdometerKm;
     float estimatedRangeKm;
@@ -101,10 +114,10 @@ inline const char* getVehicleStateString(VehicleState s) {
 
 inline const char* getDriveModeString(DriveMode m) {
     switch (m) {
-        case MODE_ECO: return "ECO";
-        case MODE_URBAN: return "URBAN";
-        case MODE_SPORT: return "SPORT";
-        case MODE_REVERSE: return "REVERSE";
+        case MODE_ECO: return "ECO (50 KM/H)";
+        case MODE_URBAN: return "URBAN (85 KM/H)";
+        case MODE_SPORT: return "SPORT (120+ KM/H)";
+        case MODE_REVERSE: return "REVERSE (5 KM/H)";
         default: return "UNKNOWN";
     }
 }
@@ -117,9 +130,10 @@ inline const char* getFaultCodeString(FaultCode f) {
         case FAULT_BRAKE_PRIORITY: return "ERR_02: BRAKE OVER ACCELERATOR";
         case FAULT_BMS_UNDERVOLTAGE: return "ERR_04: BATT LOW VOLTAGE CUTOFF";
         case FAULT_BMS_OVERVOLTAGE: return "ERR_04B: BATT OVERVOLTAGE";
-        case FAULT_OVER_TEMPERATURE: return "ERR_06: THERMAL OVERHEAT TRIP";
+        case FAULT_OVER_TEMPERATURE: return "ERR_06: THERMAL OVERHEAT TRIP (>95C)";
         case FAULT_CAN_TIMEOUT: return "ERR_07: CAN BUS COMMS TIMEOUT";
         case FAULT_EMERGENCY_STOP: return "ERR_08: EMERGENCY STOP TRIGGERED";
+        case FAULT_CRASH_TIPOVER: return "ERR_09: CRASH / TIP-OVER SENSOR TRIP";
         default: return "ERR_UNKNOWN";
     }
 }

@@ -2,7 +2,7 @@
 """
 ============================================================================
 LAKSANASOFT-EV: HARDWARE-IN-THE-LOOP (HIL) VEHICLE DYNAMICS SIMULATOR
-High Performance Edition (Calibrated for 120+ km/h Top Speed)
+Smart ADAS Edition (120+ km/h, 6-DOF IMU Lean Angle, TCS & Dual-Battery BMS)
 (c) 2026 PT. Laksana Digital Industri
 ============================================================================
 """
@@ -17,14 +17,14 @@ import paho.mqtt.client as mqtt
 VIN = "LAKSANAEV2026ID001"
 VEHICLE_MASS = 210.0      # Massa Total Kendaraan + Rider (kg)
 WHEEL_RADIUS = 0.267      # Jari-jari roda belakang 14 inci (m)
-GEAR_RATIO = 3.0          # Rasio reduksi gir 15T : 45T (Top Speed Oriented)
+GEAR_RATIO = 3.0          # Rasio reduksi gir 15T : 45T
 AIR_DENSITY = 1.225       # Densitas udara (kg/m^3)
-DRAG_COEFF = 0.62         # Cd (Tuck-in high speed riding position)
+DRAG_COEFF = 0.62         # Cd
 FRONTAL_AREA = 0.68       # Luas penampang depan (m^2)
 ROLLING_RESISTANCE = 0.015# Crr
 
-# Parameter Baterai & Motor Upgrade (18kW Peak)
-BATT_CAPACITY_WH = 3600.0 # 72V 50Ah High Discharge = 3.6 kWh
+# Parameter Dual-Battery & Motor Upgrade (18kW Peak)
+BATT_CAPACITY_WH = 4320.0 # Dual 72V 30Ah Packs = 72V 60Ah (4.32 kWh)
 BATT_NOMINAL_VOLT = 72.0
 MAX_MOTOR_RPM = 6200.0    # Putaran motor maksimal dengan Field Weakening
 MAX_MOTOR_TORQUE = 72.0   # Nm pada shaft motor QS 138 90H V3
@@ -43,9 +43,17 @@ class ElectricMotorcycleSimulator:
         self.throttle_pct = 0.0
         self.brake_engaged = False
         self.side_stand_down = False
+        self.keyless_unlocked = True
+        self.tcs_active = False
         
-        # Baterai
-        self.soc = 95.0
+        # Sensor Inersia IMU 6-DOF
+        self.lean_angle_deg = 0.0
+        self.pitch_angle_deg = 0.0
+        
+        # Dual Baterai Pack
+        self.pack_a_soc = 94.0
+        self.pack_b_soc = 92.0
+        self.soc = 93.0
         self.pack_voltage = 76.8
         self.pack_current = 0.0
         self.power_watts = 0.0
@@ -71,12 +79,19 @@ class ElectricMotorcycleSimulator:
             self.throttle_pct = 0.0
             self.state = "STATE_STANDBY"
         
+        # Simulasi Dinamika Kemiringan Menikung (Lean Angle)
+        if self.speed_kmh > 20.0 and not self.brake_engaged:
+            self.lean_angle_deg = math.sin(self.uptime_sec * 0.8) * min(38.0, self.speed_kmh * 0.32)
+        else:
+            self.lean_angle_deg = 0.0
+
         # Gaya dorong motor (Tractive Force)
         if self.brake_engaged:
             self.state = "STATE_REGEN" if self.speed_kmh > 5.0 and self.soc < 95 else "STATE_DRIVE"
             motor_torque = 0.0
             regen_force = 450.0 if self.state == "STATE_REGEN" else 0.0
-            friction_brake_force = 850.0 # Rem cakram 4-piston
+            friction_brake_force = 850.0
+            self.tcs_active = False
         else:
             self.state = "STATE_DRIVE"
             regen_force = 0.0
@@ -86,6 +101,13 @@ class ElectricMotorcycleSimulator:
             mode_multiplier = 1.0 if self.mode == "SPORT" else (0.70 if self.mode == "URBAN" else 0.35)
             motor_torque = (self.throttle_pct / 100.0) * MAX_MOTOR_TORQUE * mode_multiplier
             
+            # Deteksi & Intervensi TCS jika akselerasi terlalu tajam saat miring
+            if self.throttle_pct > 85.0 and abs(self.lean_angle_deg) > 25.0:
+                self.tcs_active = True
+                motor_torque *= 0.60 # Reduksi torsi TCS
+            else:
+                self.tcs_active = False
+
             # Field weakening compensation untuk menjaga torsi tetap kuat hingga 6000 RPM
             if self.motor_rpm > 4200:
                 motor_torque *= max(0.45, 1.0 - ((self.motor_rpm - 4200) / 3200.0))
@@ -114,21 +136,23 @@ class ElectricMotorcycleSimulator:
         # Kalkulasi Daya Listrik (Power Watts) & Baterai
         mech_power = tractive_force * self.speed_ms
         if self.state == "STATE_REGEN":
-            elec_power = - (regen_force * self.speed_ms * 0.75) # Efisiensi regen ~75%
+            elec_power = - (regen_force * self.speed_ms * 0.75)
         else:
-            elec_power = (mech_power / 0.86) + 40.0 # Efisiensi motor/inverter ~86% + 40W auxiliary
+            elec_power = (mech_power / 0.86) + 40.0
         
         self.power_watts = elec_power
         self.pack_current = elec_power / self.pack_voltage
         
-        # Konsumsi Baterai
+        # Konsumsi Dual Baterai
         energy_delta_wh = (elec_power * (dt_sec / 3600.0))
         self.energy_used_wh += max(0.0, energy_delta_wh)
-        self.soc = max(5.0, min(100.0, self.soc - (energy_delta_wh / BATT_CAPACITY_WH * 100.0)))
+        self.pack_a_soc = max(5.0, min(100.0, self.pack_a_soc - (energy_delta_wh / (BATT_CAPACITY_WH/2) * 50.0)))
+        self.pack_b_soc = max(5.0, min(100.0, self.pack_b_soc - (energy_delta_wh / (BATT_CAPACITY_WH/2) * 50.0)))
+        self.soc = (self.pack_a_soc + self.pack_b_soc) / 2.0
         
-        # Estimasi Tegangan Pack berbasis SOC & Load Drop (Internal Resistance 0.05 Ohm)
+        # Estimasi Tegangan Pack berbasis SOC & Load Drop
         open_circuit_volt = 64.0 + (self.soc / 100.0) * 18.0
-        self.pack_voltage = open_circuit_volt - (self.pack_current * 0.05)
+        self.pack_voltage = open_circuit_volt - (self.pack_current * 0.04)
 
         # Odometer
         dist_km = (self.speed_ms * dt_sec) / 1000.0
@@ -148,7 +172,7 @@ class ElectricMotorcycleSimulator:
 
     def get_telemetry_dict(self):
         remaining_wh = (self.soc / 100.0) * BATT_CAPACITY_WH
-        range_km = remaining_wh / 35.0 # ~35 Wh/km pada penggunaan dinamis
+        range_km = remaining_wh / 35.0
 
         return {
             "vin": VIN,
@@ -158,7 +182,9 @@ class ElectricMotorcycleSimulator:
                 "mode": self.mode,
                 "ready": True,
                 "side_stand": self.side_stand_down,
-                "brake": self.brake_engaged
+                "brake": self.brake_engaged,
+                "keyless_unlocked": self.keyless_unlocked,
+                "tcs_active": self.tcs_active
             },
             "dynamics": {
                 "speed_kmh": round(self.speed_kmh, 1),
@@ -167,13 +193,19 @@ class ElectricMotorcycleSimulator:
                 "odometer_km": round(self.odometer_km, 2),
                 "trip_km": round(self.trip_km, 2)
             },
+            "imu": {
+                "lean_angle_deg": round(self.lean_angle_deg, 1),
+                "pitch_angle_deg": round(self.pitch_angle_deg, 1)
+            },
             "energy": {
                 "pack_voltage": round(self.pack_voltage, 1),
                 "pack_current": round(self.pack_current, 1),
                 "power_watts": round(self.power_watts, 1),
                 "soc": int(self.soc),
                 "soh": 99,
-                "range_km": round(range_km, 1)
+                "range_km": round(range_km, 1),
+                "pack_a_soc": round(self.pack_a_soc, 1),
+                "pack_b_soc": round(self.pack_b_soc, 1)
             },
             "temperatures": {
                 "motor_c": round(self.motor_temp, 1),
@@ -187,11 +219,11 @@ class ElectricMotorcycleSimulator:
         }
 
 def run_simulation():
-    print("=" * 70)
-    print(" ⚡ LAKSANASOFT-EV: HIGH-SPEED SIMULATOR (120+ KM/H CALIBRATION)")
+    print("=" * 75)
+    print(" ⚡ LAKSANASOFT-EV: SMART ADAS SIMULATOR (120+ KM/H, 6-DOF IMU, TCS, DUAL BMS)")
     print(f" 📡 Menghubungkan ke MQTT Broker: {MQTT_BROKER}:{MQTT_PORT}")
     print(f" 📦 Topik Telemetri: {MQTT_TOPIC}")
-    print("=" * 70)
+    print("=" * 75)
 
     client = mqtt.Client()
     try:
@@ -200,21 +232,20 @@ def run_simulation():
         print(" [OK] Terhubung ke Broker MQTT!")
     except Exception as e:
         print(f" [PERINGATAN] Gagal terhubung ke MQTT: {e}")
-        print(" Simulator akan tetap berjalan dan menampilkan log lokal.")
 
     sim = ElectricMotorcycleSimulator()
     step = 0
 
     try:
         while True:
-            # Simulasi Siklus Berkendara Kecepatan Tinggi (Top Speed 120 km/jam Test)
+            # Simulasi Siklus Berkendara Kecepatan Tinggi & Tikungan (TCS & Lean Angle Demo)
             cycle_phase = (step // 60) % 5
             if cycle_phase == 0:
                 # Akselerasi Halus (0 - 60 km/jam)
                 sim.throttle_pct = min(50.0, sim.throttle_pct + 1.5)
                 sim.brake_engaged = False
             elif cycle_phase == 1:
-                # Cruising Kota (60 - 75 km/jam)
+                # Cruising Kota & Menikung (60 - 75 km/jam)
                 sim.throttle_pct = 55.0
                 sim.brake_engaged = False
             elif cycle_phase == 2:
@@ -238,12 +269,12 @@ def run_simulation():
 
             # Cetak status live di terminal
             sys.stdout.write(
-                f"\r\033[K[120 KM/H TELEMETRY] Speed: {payload['dynamics']['speed_kmh']:>5.1f} km/h | "
+                f"\r\033[K[SMART EV] Spd: {payload['dynamics']['speed_kmh']:>5.1f} km/h | "
                 f"RPM: {payload['dynamics']['motor_rpm']:>4} | "
-                f"Power: {payload['energy']['power_watts']/1000:>4.1f} kW | "
-                f"Curr: {payload['energy']['pack_current']:>5.1f}A | "
-                f"SOC: {payload['energy']['soc']:>3}% | "
-                f"State: {payload['system']['state']}"
+                f"Pwr: {payload['energy']['power_watts']/1000:>4.1f} kW | "
+                f"Lean: {payload['imu']['lean_angle_deg']:>5.1f}° | "
+                f"TCS: {'AKTIF' if payload['system']['tcs_active'] else 'OFF':>5} | "
+                f"Dual-SOC: {payload['energy']['pack_a_soc']:.0f}%/{payload['energy']['pack_b_soc']:.0f}%"
             )
             sys.stdout.flush()
 

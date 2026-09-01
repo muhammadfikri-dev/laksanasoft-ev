@@ -3,14 +3,28 @@
 [![Platform](https://img.shields.io/badge/Platform-ESP32--S3%20%7C%20FreeRTOS-blue.svg)](https://www.espressif.com/)
 [![CAN Bus](https://img.shields.io/badge/Protocol-CAN%202.0B%20%7C%20MQTT-brightgreen.svg)]()
 [![License](https://img.shields.io/badge/License-MIT-orange.svg)](LICENSE)
-[![Status](https://img.shields.io/badge/Status-Smart%20ADAS%20Active-success.svg)]()
+[![Status](https://img.shields.io/badge/Status-120%20km%2Fh%20Ready-success.svg)]()
+
+<div align="center">
+  <img src="docs/assets/laksanasoft-ev-showcase.jpg" alt="Laksanasoft-EV Concept Showcase" width="100%" style="border-radius: 12px; margin-bottom: 15px;" />
+  <p><em>Konsep Desain Laksanasoft-EV — Smart Cyber-Aerodynamic Electric Motorcycle (120 km/jam, 18kW Peak Powertrain)</em></p>
+</div>
+
+---
 
 **Laksanasoft-EV** adalah rancang bangun ekosistem terbuka (*open-architecture*) untuk konversi dan manufaktur sepeda motor listrik pintar berperforma tinggi. Platform ini mengintegrasikan teknologi **Smart VCU 2.0**, sensor inersia **6-Axis IMU (Lean Angle Detection)**, **Traction Control System (TCS)**, sistem akses **Smart Keyless (NFC & BLE Proximity)**, arsitektur **Dual-Battery Active Balancing (72V Hot-Swappable)**, serta kemampuan jelajah hingga kecepatan puncak **120 – 125 km/jam**.
 
 ---
 
+<div align="center">
+  <img src="docs/assets/laksanasoft-ev-cockpit.jpg" alt="Laksanasoft-EV Digital Cockpit HMI" width="100%" style="border-radius: 12px; margin-bottom: 15px;" />
+  <p><em>Cockpit Digital Instrument Cluster HMI 7-Inci — Real-time 120 km/h Telemetry, Lean Angle & Dual-Battery BMS</em></p>
+</div>
+
+---
+
 ## 📌 Daftar Isi
-1. [Fitur Unggulan Sistem Cerdas (Smart Features)](#-fitur-unggulan-sistem-cerdas-smart-features)
+1. [Fitur Unggulan Sistem Cerdas](#-fitur-unggulan-sistem-cerdas)
 2. [Spesifikasi Utama Kendaraan](#-spesifikasi-utama-kendaraan)
 3. [Alat & Bahan yang Mudah Dijangkau](#-alat--bahan-yang-mudah-dijangkau-pasar-indonesia)
 4. [Master Wiring Diagram](#-master-wiring-diagram)
@@ -21,15 +35,15 @@
 
 ---
 
-## 🧠 Fitur Unggulan Sistem Cerdas (Smart Features)
+## 🧠 Fitur Unggulan Sistem Cerdas
 
 1. **6-Axis IMU & Lean Angle Safety:**
    - Membaca sudut kemiringan rebah motor saat menikung (*cornering lean angle*).
    - Membatasi hentakan torsi akselerasi secara adaptif saat motor miring di atas $35^\circ$ demi mencegah ban selip (*low-side accident*).
-   - *Tip-Over Crash Cutoff:* Memutus arus utama seketika jika motor terjatuh $\ge 60^\circ$ dan mengirim sinyal bahaya SOS via IoT.
+   - *Tip-Over Crash Cutoff:* Memutus arus utama seketika jika motor terjatuh $\ge 60^\circ$ dan mengirim sinyal darurat SOS via telemetri IoT.
 2. **Traction Control System (TCS):**
-   - Mendeteksi selisih putaran roda belakang terhadap kecepatan kendaraan (*wheel slip*).
-   - Mengurangi arus torsi hingga $40\%$ dalam waktu $< 15\text{ ms}$ untuk menjaga stabilitas di jalan basah atau berpasir.
+   - Mendeteksi selisih putaran roda belakang terhadap kecepatan aktual (*wheel slip*).
+   - Mengurangi torsi hingga $40\%$ dalam waktu $< 15\text{ ms}$ untuk menjaga stabilitas di jalan basah/berpasir.
 3. **Smart Keyless Access (NFC & BLE Proximity):**
    - *Passive Keyless Entry:* Otomatis membuka kunci (*Unlock*) saat pengendara mendekat $\le 1.5\text{ m}$ dan mengunci otomatis saat menjauh.
    - Mendukung tap kartu NFC / e-KTP dan kode PIN darurat pada layar HMI.
@@ -78,6 +92,9 @@ Semua komponen dirancang agar mudah dibeli di **Tokopedia, Shopee, Toko Listrik,
 ```text
 laksanasoft-ev/
 ├── docs/                                     # Dokumentasi teknis komprehensif
+│   ├── assets/                               # Gambar visual render & diagram
+│   │   ├── laksanasoft-ev-showcase.jpg       # Render motor Laksanasoft-EV
+│   │   └── laksanasoft-ev-cockpit.jpg        # Render cockpit HMI cluster
 │   ├── 01-spesifikasi-sistem.md              # Kalkulasi traksi 120 km/jam & powertrain
 │   ├── 02-bill-of-materials-bom.md           # BOM part standar & upgrade 120 km/jam
 │   ├── 02b-panduan-belanja-lokal-indonesia.md# Panduan belanja & link part e-commerce lokal
@@ -91,39 +108,26 @@ laksanasoft-ev/
 │   ├── src/                                  # Implementasi FreeRTOS Task (Core 0 & Core 1)
 │   └── platformio.ini                        # Konfigurasi build PlatformIO
 ├── telemetry-server/                         # Backend telemetri IoT (Node.js & WebSocket)
-│   ├── package.json
-│   └── server.js
-├── dashboard-ui/                             # Smart 7" Digital Cluster HMI (Skala 160 km/h)
-│   ├── index.html
-│   ├── styles.css
-│   └── app.js
-├── simulator/                                # Software-In-The-Loop (SITL) Smart Simulator
-│   ├── requirements.txt
-│   └── vehicle_simulator.py
-├── LICENSE                                   # Lisensi proyek (MIT)
-└── README.md                                 # Dokumentasi utama proyek
+├── dashboard-ui/                             # Smart 7" Digital Cluster HMI
+└── simulator/                                # Software-In-The-Loop (SITL) Smart Simulator
 ```
 
 ---
 
 ## 🚀 Panduan Memulai Cepat (Quick Start)
 
-### 1. Menjalankan Simulator Kendaraan & HMI Dashboard
-Anda dapat menguji respon akselerasi 120 km/jam, dinamika kemiringan sudut (*lean angle*), dan intervensi TCS secara virtual:
-
 ```bash
 # 1. Jalankan Backend Telemetri
 cd telemetry-server
-npm install
-npm start
+npm install && npm start
 
-# 2. Jalankan Simulator Kendaraan Cerdas (Buka terminal baru)
+# 2. Jalankan Simulator Kendaraan Cerdas (Terminal baru)
 cd ../simulator
 pip install -r requirements.txt
 python vehicle_simulator.py
 
 # 3. Buka Dashboard HMI
-# Buka file dashboard-ui/index.html di browser web Anda
+# Buka file dashboard-ui/index.html di browser Anda
 ```
 
 ---
